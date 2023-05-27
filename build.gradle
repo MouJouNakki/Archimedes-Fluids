@@ -7,7 +7,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-version = '1.0'
+version = '1.1'
 group = 'com.moujounakki.fluidmotionoverhaul' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'fluidmotionoverhaul'
 
@@ -194,11 +194,6 @@ mixin {
 
     // Configs to add to runs and jars
     config 'mixins.fluidmotionoverhaul.json'
-
-    // Specify options for dev run configs
-    debug.verbose = true
-    debug.export = true
-    dumpTargetOnFailure = true
 
     // Options for the Annotation Processor
     quiet
