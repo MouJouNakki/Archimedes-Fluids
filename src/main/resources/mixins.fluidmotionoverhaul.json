@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "com.moujounakki.fluidmotionoverhaul.mixins",
+  "mixins": [
+    "MixinFlowingFluid"
+  ]
+}
