@@ -18,17 +18,19 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(FlowingFluid.class)
 public abstract class MixinFlowingFluid extends Fluid {
+@SuppressWarnings("unused")
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
-        if(blockstate.canBeReplaced(state.getType()) && blockstate.getFluidState().getType().isSame(Fluids.EMPTY)) {
+        FluidState fluidState = blockstate.getFluidState();
+        if(blockstate.canBeReplaced(state.getType()) && fluidState.isEmpty()) {
             if (!blockstate.isAir()) {
                 this.beforeDestroyingBlock(level, pos.below(), blockstate);
             }
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
             level.setBlock(pos.below(),this.getFlowing(this.getAmount(state),this.isFallingAt(level, pos)).createLegacyBlock(),3);
         }
-        else if(blockstate.getFluidState().getType().isSame(this) && blockstate.getFluidState().getType().getAmount(blockstate.getFluidState()) < 8) {
-            int otherAmount = blockstate.getFluidState().getType().getAmount(blockstate.getFluidState());
+        else if(fluidState.getType().isSame(this) && fluidState.getAmount() < 8) {
+            int otherAmount = fluidState.getAmount();
             int transfer = Math.min(this.getAmount(state),8-otherAmount);
             if(transfer >= this.getAmount(state))
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
@@ -40,7 +42,8 @@ public abstract class MixinFlowingFluid extends Fluid {
             for(Direction direction : Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom())) {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
-                if(blockstate1.canBeReplaced(state.getType()) && blockstate1.getFluidState().getType().isSame(Fluids.EMPTY)) {
+                FluidState fluidState1 = blockstate1.getFluidState();
+                if(blockstate1.canBeReplaced(state.getType()) && fluidState1.isEmpty()) {
                     if(!blockstate1.isAir()) {
                         this.beforeDestroyingBlock(level, pos1, blockstate1);
                     }
@@ -48,8 +51,8 @@ public abstract class MixinFlowingFluid extends Fluid {
                     level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
                     break;
                 }
-                else if(blockstate1.getFluidState().getType().isSame(this)) {
-                    int otherAmount = blockstate1.getFluidState().getType().getAmount(blockstate1.getFluidState());
+                else if(fluidState1.is(this)) {
+                    int otherAmount = fluidState1.getAmount();
                     if(this.getAmount(state) > otherAmount) {
                         level.setBlock(pos1, this.getFlowing(otherAmount+1,this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
                         level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
@@ -62,7 +65,7 @@ public abstract class MixinFlowingFluid extends Fluid {
             for(Direction direction : Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom())) {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
-                if(blockstate1.canBeReplaced(state.getType()) && blockstate1.getFluidState().getType().isSame(Fluids.EMPTY)) {
+                if(blockstate1.canBeReplaced(state.getType()) && blockstate1.getFluidState().isEmpty()) {
                     if(!blockstate1.isAir()) {
                         this.beforeDestroyingBlock(level, pos1, blockstate1);
                     }
@@ -78,16 +81,15 @@ public abstract class MixinFlowingFluid extends Fluid {
         BlockPos blockpos1 = pos.above();
         BlockState blockstate2 = reader.getBlockState(blockpos1);
         FluidState fluidstate2 = blockstate2.getFluidState();
-        return (!fluidstate2.isEmpty() && fluidstate2.getType().isSame(this) && this.canPassThroughWall(Direction.UP, reader, pos, blockstate, blockpos1, blockstate2));
+        return (!fluidstate2.isEmpty() && fluidstate2.is(this) && this.canPassThroughWall(Direction.UP, reader, pos, blockstate, blockpos1, blockstate2));
     }
+    @SuppressWarnings("SameReturnValue")
     @Shadow
     private boolean canPassThroughWall(Direction p_76062_, BlockGetter p_76063_, BlockPos p_76064_, BlockState p_76065_, BlockPos p_76066_, BlockState p_76067_) {
         return false;
     }
     @Shadow
-    public FluidState getFlowing(int p_75954_, boolean p_75955_) {
-        return null;
-    }
+    public abstract FluidState getFlowing(int p_75954_, boolean p_75955_);
     @Shadow
     protected abstract void beforeDestroyingBlock(LevelAccessor p_76002_, BlockPos p_76003_, BlockState p_76004_);
 
