@@ -20,16 +20,16 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class MixinFlowingFluid extends Fluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
-        FluidState fluidState = blockstate.getFluidState();
-        if(blockstate.canBeReplaced(state.getType()) && fluidState.isEmpty()) {
+        FluidState fluidstate = blockstate.getFluidState();
+        if(blockstate.canBeReplaced(state.getType()) && fluidstate.isEmpty()) {
             if (!blockstate.isAir()) {
                 this.beforeDestroyingBlock(level, pos.below(), blockstate);
             }
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
             level.setBlock(pos.below(),this.getFlowing(this.getAmount(state),this.isFallingAt(level, pos)).createLegacyBlock(),3);
         }
-        else if(fluidState.getType().isSame(this) && fluidState.getAmount() < 8) {
-            int otherAmount = fluidState.getAmount();
+        else if(fluidstate.getType().isSame(this) && fluidstate.getAmount() < 8) {
+            int otherAmount = fluidstate.getAmount();
             int transfer = Math.min(this.getAmount(state),8-otherAmount);
             if(transfer >= this.getAmount(state))
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
@@ -41,8 +41,8 @@ public abstract class MixinFlowingFluid extends Fluid {
             for(Direction direction : Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom())) {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
-                FluidState fluidState1 = blockstate1.getFluidState();
-                if(blockstate1.canBeReplaced(state.getType()) && fluidState1.isEmpty()) {
+                FluidState fluidstate1 = blockstate1.getFluidState();
+                if(blockstate1.canBeReplaced(state.getType()) && fluidstate1.isEmpty()) {
                     if(!blockstate1.isAir()) {
                         this.beforeDestroyingBlock(level, pos1, blockstate1);
                     }
@@ -50,8 +50,8 @@ public abstract class MixinFlowingFluid extends Fluid {
                     level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
                     break;
                 }
-                else if(fluidState1.is(this)) {
-                    int otherAmount = fluidState1.getAmount();
+                else if(fluidstate1.is(this)) {
+                    int otherAmount = fluidstate1.getAmount();
                     if(this.getAmount(state) > otherAmount) {
                         level.setBlock(pos1, this.getFlowing(otherAmount+1,this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
                         level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
