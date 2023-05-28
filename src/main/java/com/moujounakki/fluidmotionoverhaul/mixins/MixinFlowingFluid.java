@@ -1,5 +1,6 @@
 package com.moujounakki.fluidmotionoverhaul.mixins;
 
+import com.moujounakki.fluidmotionoverhaul.IMixinFlowingFluid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -17,7 +18,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(FlowingFluid.class)
-public abstract class MixinFlowingFluid extends Fluid {
+@SuppressWarnings("unused")
+public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
         if(blockstate.canBeReplaced(state.getType()) && blockstate.getFluidState().getType().isSame(Fluids.EMPTY)) {
@@ -94,5 +96,45 @@ public abstract class MixinFlowingFluid extends Fluid {
     @Overwrite
     protected static int getLegacyLevel(FluidState p_76093_) {
         return 8 - Math.min(p_76093_.getAmount(), 8);
+    }
+    public boolean checkForFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
+        return findSpaceForFluid(level, pos, state) == null;
+    }
+    public void moveFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
+        if(level.getBlockState(pos).getFluidState().is(Fluids.EMPTY))
+            return;
+        BlockPos pos1 = findSpaceForFluid(level, pos, state);
+        assert pos1 != null;
+        BlockState blockstate1 = level.getBlockState(pos1);
+        FluidState fluidstate1 = blockstate1.getFluidState();
+        if(blockstate1.canBeReplaced(this) && fluidstate1.isEmpty()) {
+            if(!blockstate1.isAir()) {
+                this.beforeDestroyingBlock(level, pos1, blockstate1);
+            }
+            level.setBlock(pos1, this.getFlowing(this.getAmount(state),this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+        }
+        else if(fluidstate1.is(this)) {
+            int otherAmount = fluidstate1.getAmount();
+            level.setBlock(pos1, this.getFlowing(otherAmount+state.getAmount(),this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+        }
+    }
+    private BlockPos findSpaceForFluid(LevelAccessor level, BlockPos pos, FluidState state) {
+        for(Direction direction : Direction.allShuffled(level.getRandom())) {
+            BlockPos pos1 = pos.relative(direction);
+            BlockState blockstate1 = level.getBlockState(pos1);
+            FluidState fluidstate1 = blockstate1.getFluidState();
+            if(blockstate1.canBeReplaced(this) && fluidstate1.getType().isSame(Fluids.EMPTY)) {
+                return pos1;
+            }
+            else if(fluidstate1.getType().isSame(this)) {
+                int otherAmount = fluidstate1.getType().getAmount(fluidstate1);
+                if(this.getAmount(state)+otherAmount <= 8) {
+                    return pos1;
+                }
+            }
+        }
+        return null;
     }
 }
