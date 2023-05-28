@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "com.moujounakki.fluidmotionoverhaul.mixins",
+  "package": "com.moujounakki.archimedesfluids.mixins",
   "mixins": [
     "MixinFlowingFluid"
   ]
