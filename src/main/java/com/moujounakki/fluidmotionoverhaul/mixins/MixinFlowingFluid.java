@@ -97,4 +97,19 @@ public abstract class MixinFlowingFluid extends Fluid {
     protected static int getLegacyLevel(FluidState p_76093_) {
         return 8 - Math.min(p_76093_.getAmount(), 8);
     }
+    private enum FluidSpreadType {
+        REPLACE,
+        ADD,
+        BLOCKED
+    }
+    private FluidSpreadType getFluidSpreadType(BlockState blockstate) {
+        FluidState fluidstate = blockstate.getFluidState();
+        if(blockstate.canBeReplaced(this) && fluidstate.isEmpty()) {
+            return FluidSpreadType.REPLACE;
+        }
+        else if(fluidstate.is(this)) {
+            return FluidSpreadType.ADD;
+        }
+        return FluidSpreadType.BLOCKED;
+    }
 }
