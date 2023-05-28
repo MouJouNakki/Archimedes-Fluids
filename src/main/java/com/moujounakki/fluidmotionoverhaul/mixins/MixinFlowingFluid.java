@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class MixinFlowingFluid extends Fluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
-        FluidState fluidState = blockstate.getFluidState();
+        FluidState fluidstate = blockstate.getFluidState();
         FluidSpreadType spreadType = this.getFluidSpreadType(blockstate);
         if(spreadType == FluidSpreadType.REPLACE) {
             if (!blockstate.isAir()) {
@@ -29,8 +29,8 @@ public abstract class MixinFlowingFluid extends Fluid {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
             level.setBlock(pos.below(),this.getFlowing(this.getAmount(state),this.isFallingAt(level, pos)).createLegacyBlock(),3);
         }
-        else if(spreadType == FluidSpreadType.ADD && fluidState.getAmount() < 8) {
-            int otherAmount = fluidState.getAmount();
+        else if(spreadType == FluidSpreadType.ADD && fluidstate.getAmount() < 8) {
+            int otherAmount = fluidstate.getAmount();
             int transfer = Math.min(this.getAmount(state),8-otherAmount);
             if(transfer >= this.getAmount(state))
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
@@ -42,7 +42,7 @@ public abstract class MixinFlowingFluid extends Fluid {
             for(Direction direction : Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom())) {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
-                FluidState fluidState1 = blockstate1.getFluidState();
+                FluidState fluidstate1 = blockstate1.getFluidState();
                 FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
                 if(spreadType1 == FluidSpreadType.REPLACE) {
                     if(!blockstate1.isAir()) {
@@ -53,7 +53,7 @@ public abstract class MixinFlowingFluid extends Fluid {
                     break;
                 }
                 else if(spreadType1 == FluidSpreadType.ADD) {
-                    int otherAmount = fluidState1.getAmount();
+                    int otherAmount = fluidstate1.getAmount();
                     if(this.getAmount(state) > otherAmount) {
                         level.setBlock(pos1, this.getFlowing(otherAmount+1,this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
                         level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
