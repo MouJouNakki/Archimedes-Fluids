@@ -8,8 +8,8 @@ plugins {
 }
 
 version = '1.1'
-group = 'com.moujounakki.fluidmotionoverhaul' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = 'fluidmotionoverhaul'
+group = 'com.moujounakki.archimedesfluids' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = 'archimedesfluids'
 
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -52,10 +52,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', 'fluidmotionoverhaul'
+            property 'forge.enabledGameTestNamespaces', 'archimedesfluids'
 
             mods {
-                fluidmotionoverhaul {
+                archimedesfluids {
                     source sourceSets.main
                 }
             }
@@ -68,10 +68,10 @@ minecraft {
 
             property 'forge.logging.console.level', 'debug'
 
-            property 'forge.enabledGameTestNamespaces', 'fluidmotionoverhaul'
+            property 'forge.enabledGameTestNamespaces', 'archimedesfluids'
 
             mods {
-                fluidmotionoverhaul {
+                archimedesfluids {
                     source sourceSets.main
                 }
             }
@@ -87,10 +87,10 @@ minecraft {
 
             property 'forge.logging.console.level', 'debug'
 
-            property 'forge.enabledGameTestNamespaces', 'examplemod'
+            property 'forge.enabledGameTestNamespaces', 'archimedesfluids'
 
             mods {
-                fluidmotionoverhaul {
+                archimedesfluids {
                     source sourceSets.main
                 }
             }
@@ -107,7 +107,7 @@ minecraft {
             args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
 
             mods {
-                fluidmotionoverhaul {
+                archimedesfluids {
                     source sourceSets.main
                 }
             }
@@ -154,12 +154,12 @@ dependencies {
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : "examplemod",
-                "Specification-Vendor"    : "examplemodsareus",
+                "Specification-Title"     : "archimedesfluids",
+                "Specification-Vendor"    : "moujounakki",
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
-                "Implementation-Vendor"   : "examplemodsareus",
+                "Implementation-Vendor"   : "moujounakki",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
@@ -190,10 +190,10 @@ tasks.withType(JavaCompile).configureEach {
 
 mixin {
     // Refmaps for each SourceSet
-    //add sourceSets.main, 'mixins.fluidmotionoverhaul.refmap.json'
+    //add sourceSets.main, 'mixins.archimedesfluids.refmap.json'
 
     // Configs to add to runs and jars
-    config 'mixins.fluidmotionoverhaul.json'
+    config 'mixins.archimedesfluids.json'
 
     // Options for the Annotation Processor
     quiet
