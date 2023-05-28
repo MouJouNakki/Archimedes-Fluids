@@ -21,14 +21,15 @@ public abstract class MixinFlowingFluid extends Fluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
         FluidState fluidState = blockstate.getFluidState();
-        if(blockstate.canBeReplaced(state.getType()) && fluidState.isEmpty()) {
+        FluidSpreadType spreadType = this.getFluidSpreadType(blockstate);
+        if(spreadType == FluidSpreadType.REPLACE) {
             if (!blockstate.isAir()) {
                 this.beforeDestroyingBlock(level, pos.below(), blockstate);
             }
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
             level.setBlock(pos.below(),this.getFlowing(this.getAmount(state),this.isFallingAt(level, pos)).createLegacyBlock(),3);
         }
-        else if(fluidState.getType().isSame(this) && fluidState.getAmount() < 8) {
+        else if(spreadType == FluidSpreadType.ADD && fluidState.getAmount() < 8) {
             int otherAmount = fluidState.getAmount();
             int transfer = Math.min(this.getAmount(state),8-otherAmount);
             if(transfer >= this.getAmount(state))
@@ -42,7 +43,8 @@ public abstract class MixinFlowingFluid extends Fluid {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
                 FluidState fluidState1 = blockstate1.getFluidState();
-                if(blockstate1.canBeReplaced(state.getType()) && fluidState1.isEmpty()) {
+                FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
+                if(spreadType1 == FluidSpreadType.REPLACE) {
                     if(!blockstate1.isAir()) {
                         this.beforeDestroyingBlock(level, pos1, blockstate1);
                     }
@@ -50,7 +52,7 @@ public abstract class MixinFlowingFluid extends Fluid {
                     level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
                     break;
                 }
-                else if(fluidState1.is(this)) {
+                else if(spreadType1 == FluidSpreadType.ADD) {
                     int otherAmount = fluidState1.getAmount();
                     if(this.getAmount(state) > otherAmount) {
                         level.setBlock(pos1, this.getFlowing(otherAmount+1,this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
@@ -64,7 +66,8 @@ public abstract class MixinFlowingFluid extends Fluid {
             for(Direction direction : Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom())) {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
-                if(blockstate1.canBeReplaced(state.getType()) && blockstate1.getFluidState().isEmpty()) {
+                FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
+                if(spreadType1 == FluidSpreadType.REPLACE) {
                     if(!blockstate1.isAir()) {
                         this.beforeDestroyingBlock(level, pos1, blockstate1);
                     }
