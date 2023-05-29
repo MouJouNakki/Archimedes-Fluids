@@ -1,4 +1,4 @@
-package com.moujounakki.fluidmotionoverhaul;
+package com.moujounakki.archimedesfluids;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
@@ -21,15 +21,16 @@ import java.util.List;
 import java.util.Objects;
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(FluidMotionOverhaul.MODID)
-public class FluidMotionOverhaul
+@Mod(ArchimedesFluids.MODID)
+@SuppressWarnings("unused")
+public class ArchimedesFluids
 {
     // Define mod id in a common place for everything to reference
-    public static final String MODID = "fluidmotionoverhaul";
+    public static final String MODID = "archimedesfluids";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public FluidMotionOverhaul()
+    public ArchimedesFluids()
     {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 

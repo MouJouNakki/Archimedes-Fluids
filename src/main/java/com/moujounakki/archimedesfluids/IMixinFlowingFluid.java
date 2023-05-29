@@ -1,4 +1,4 @@
-package com.moujounakki.fluidmotionoverhaul;
+package com.moujounakki.archimedesfluids;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelAccessor;

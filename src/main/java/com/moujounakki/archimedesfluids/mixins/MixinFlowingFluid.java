@@ -1,6 +1,7 @@
-package com.moujounakki.fluidmotionoverhaul.mixins;
+package com.moujounakki.archimedesfluids.mixins;
 
-import com.moujounakki.fluidmotionoverhaul.IMixinFlowingFluid;
+import com.moujounakki.archimedesfluids.FluidSpreadType;
+import com.moujounakki.archimedesfluids.IMixinFlowingFluid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -22,54 +23,52 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
-        if(blockstate.canBeReplaced(state.getType()) && blockstate.getFluidState().getType().isSame(Fluids.EMPTY)) {
+        FluidState fluidstate = blockstate.getFluidState();
+        FluidSpreadType spreadType = this.getFluidSpreadType(blockstate);
+        int amount = this.getAmount(state);
+        if(spreadType == FluidSpreadType.REPLACE) {
             if (!blockstate.isAir()) {
                 this.beforeDestroyingBlock(level, pos.below(), blockstate);
             }
-            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-            level.setBlock(pos.below(),this.getFlowing(this.getAmount(state),this.isFallingAt(level, pos)).createLegacyBlock(),3);
+            this.transferFluid(level, pos, pos.below(), amount);
         }
-        else if(blockstate.getFluidState().getType().isSame(this) && blockstate.getFluidState().getType().getAmount(blockstate.getFluidState()) < 8) {
-            int otherAmount = blockstate.getFluidState().getType().getAmount(blockstate.getFluidState());
-            int transfer = Math.min(this.getAmount(state),8-otherAmount);
-            if(transfer >= this.getAmount(state))
-                level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-            else
-                level.setBlock(pos, this.getFlowing(this.getAmount(state)-transfer,this.isFallingAt(level,pos)).createLegacyBlock(), 3);
-            level.setBlock(pos.below(), this.getFlowing(otherAmount+transfer,this.isFallingAt(level, pos.below())).createLegacyBlock(), 3);
+        else if(spreadType == FluidSpreadType.ADD && fluidstate.getAmount() < 8) {
+            int otherAmount = fluidstate.getAmount();
+            int transfer = Math.min(amount,8-otherAmount);
+            this.transferFluid(level, pos, pos.below(), transfer);
         }
-        else if(this.getAmount(state) > 1) {
+        else if(amount > 1) {
             for(Direction direction : Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom())) {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
-                if(blockstate1.canBeReplaced(state.getType()) && blockstate1.getFluidState().getType().isSame(Fluids.EMPTY)) {
+                FluidState fluidstate1 = blockstate1.getFluidState();
+                FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
+                if(spreadType1 == FluidSpreadType.REPLACE) {
                     if(!blockstate1.isAir()) {
                         this.beforeDestroyingBlock(level, pos1, blockstate1);
                     }
-                    level.setBlock(pos1, this.getFlowing(1,this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
-                    level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
+                    this.transferFluid(level, pos, pos1);
                     break;
                 }
-                else if(blockstate1.getFluidState().getType().isSame(this)) {
-                    int otherAmount = blockstate1.getFluidState().getType().getAmount(blockstate1.getFluidState());
-                    if(this.getAmount(state) > otherAmount) {
-                        level.setBlock(pos1, this.getFlowing(otherAmount+1,this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
-                        level.setBlock(pos, this.getFlowing(this.getAmount(state)-1,this.isFallingAt(level, pos)).createLegacyBlock(), 3);
+                else if(spreadType1 == FluidSpreadType.ADD) {
+                    int otherAmount = fluidstate1.getAmount();
+                    if(amount > otherAmount) {
+                        this.transferFluid(level, pos, pos1);
                         break;
                     }
                 }
             }
         }
-        else if(this.getAmount(state) == 1 && Math.random() < 0.3) {
+        else if(amount == 1 && Math.random() < 0.3) {
             for(Direction direction : Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom())) {
                 BlockPos pos1 = pos.relative(direction);
                 BlockState blockstate1 = level.getBlockState(pos1);
-                if(blockstate1.canBeReplaced(state.getType()) && blockstate1.getFluidState().getType().isSame(Fluids.EMPTY)) {
+                FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
+                if(spreadType1 == FluidSpreadType.REPLACE) {
                     if(!blockstate1.isAir()) {
                         this.beforeDestroyingBlock(level, pos1, blockstate1);
                     }
-                    level.setBlock(pos1, this.getFlowing(1,this.isFallingAt(level, pos1)).createLegacyBlock(), 3);
-                    level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                    this.transferFluid(level, pos, pos1);
                     break;
                 }
             }
@@ -82,20 +81,49 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
         FluidState fluidstate2 = blockstate2.getFluidState();
         return (!fluidstate2.isEmpty() && fluidstate2.getType().isSame(this) && this.canPassThroughWall(Direction.UP, reader, pos, blockstate, blockpos1, blockstate2));
     }
+    @SuppressWarnings("SameReturnValue")
     @Shadow
     private boolean canPassThroughWall(Direction p_76062_, BlockGetter p_76063_, BlockPos p_76064_, BlockState p_76065_, BlockPos p_76066_, BlockState p_76067_) {
         return false;
     }
-    @Shadow
-    public FluidState getFlowing(int p_75954_, boolean p_75955_) {
-        return null;
+    private void transferFluid(LevelAccessor level, BlockPos from, BlockPos to) {
+        this.transferFluid(level, from, to, level.getFluidState(from).getAmount(), level.getFluidState(to).getAmount());
     }
+    private void transferFluid(LevelAccessor level, BlockPos from, BlockPos to, int transfer) {
+        this.transferFluid(level, from, to, level.getFluidState(from).getAmount(), level.getFluidState(to).getAmount(), transfer);
+    }
+    private void transferFluid(LevelAccessor level, BlockPos from, BlockPos to, int fromAmount, int toAmount) {
+        this.transferFluid(level, from, to, fromAmount, toAmount, 1);
+    }
+    private void transferFluid(LevelAccessor level, BlockPos from, BlockPos to, int fromAmount, int toAmount, int transfer) {
+        this.setFlowing(level, to, toAmount+transfer);
+        this.setFlowing(level, from, fromAmount-transfer);
+    }
+    private void setFlowing(LevelAccessor level, BlockPos pos, int amount) {
+        if(amount < 1) {
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+            return;
+        }
+        level.setBlock(pos, this.getFlowing(amount, this.isFallingAt(level, pos)).createLegacyBlock(), 3);
+    }
+    @Shadow
+    public abstract FluidState getFlowing(int p_75954_, boolean p_75955_);
     @Shadow
     protected abstract void beforeDestroyingBlock(LevelAccessor p_76002_, BlockPos p_76003_, BlockState p_76004_);
 
     @Overwrite
     protected static int getLegacyLevel(FluidState p_76093_) {
         return 8 - Math.min(p_76093_.getAmount(), 8);
+    }
+    private FluidSpreadType getFluidSpreadType(BlockState blockstate) {
+        FluidState fluidstate = blockstate.getFluidState();
+        if(blockstate.canBeReplaced(this) && fluidstate.isEmpty()) {
+            return FluidSpreadType.REPLACE;
+        }
+        else if(fluidstate.getType().isSame(this)) {
+            return FluidSpreadType.ADD;
+        }
+        return FluidSpreadType.BLOCKED;
     }
     public boolean checkForFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
         return findSpaceForFluid(level, pos, state) == null;
