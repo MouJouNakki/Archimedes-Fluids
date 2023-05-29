@@ -1,6 +1,6 @@
 package com.moujounakki.archimedesfluids.mixins;
 
-import com.moujounakki.fluidmotionoverhaul.FluidSpreadType;
+import com.moujounakki.archimedesfluids.FluidSpreadType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
