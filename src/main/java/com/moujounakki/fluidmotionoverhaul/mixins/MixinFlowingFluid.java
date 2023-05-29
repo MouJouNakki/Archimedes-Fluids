@@ -77,7 +77,7 @@ public abstract class MixinFlowingFluid extends Fluid {
         BlockPos blockpos1 = pos.above();
         BlockState blockstate2 = reader.getBlockState(blockpos1);
         FluidState fluidstate2 = blockstate2.getFluidState();
-        return (!fluidstate2.isEmpty() && fluidstate2.is(this) && this.canPassThroughWall(Direction.UP, reader, pos, blockstate, blockpos1, blockstate2));
+        return (!fluidstate2.isEmpty() && fluidstate2.getType().isSame(this) && this.canPassThroughWall(Direction.UP, reader, pos, blockstate, blockpos1, blockstate2));
     }
     @SuppressWarnings("SameReturnValue")
     @Shadow
@@ -118,7 +118,7 @@ public abstract class MixinFlowingFluid extends Fluid {
         if(blockstate.canBeReplaced(this) && fluidstate.isEmpty()) {
             return FluidSpreadType.REPLACE;
         }
-        else if(fluidstate.is(this)) {
+        else if(fluidstate.getType().isSame(this)) {
             return FluidSpreadType.ADD;
         }
         return FluidSpreadType.BLOCKED;
