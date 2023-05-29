@@ -1,4 +1,4 @@
-package com.moujounakki.fluidmotionoverhaul.mixins;
+package com.moujounakki.archimedesfluids.mixins;
 
 import com.moujounakki.fluidmotionoverhaul.FluidSpreadType;
 import net.minecraft.core.BlockPos;

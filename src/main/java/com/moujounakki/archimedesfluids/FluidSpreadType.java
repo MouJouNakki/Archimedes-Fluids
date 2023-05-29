@@ -1,4 +1,4 @@
-package com.moujounakki.fluidmotionoverhaul;
+package com.moujounakki.archimedesfluids;
 
 public enum FluidSpreadType {
     REPLACE,
