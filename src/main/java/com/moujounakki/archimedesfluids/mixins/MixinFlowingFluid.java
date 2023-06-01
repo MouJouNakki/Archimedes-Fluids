@@ -1,6 +1,7 @@
 package com.moujounakki.archimedesfluids.mixins;
 
 import com.moujounakki.archimedesfluids.FluidSpreadType;
+import com.moujounakki.archimedesfluids.IMixinFlowingFluid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -18,7 +19,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(FlowingFluid.class)
 @SuppressWarnings("unused")
-public abstract class MixinFlowingFluid extends Fluid {
+public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
         FluidState fluidstate = blockstate.getFluidState();
@@ -122,5 +123,32 @@ public abstract class MixinFlowingFluid extends Fluid {
             return FluidSpreadType.ADD;
         }
         return FluidSpreadType.BLOCKED;
+    }
+
+    @Override
+    public void evaporateFluid(LevelAccessor level, BlockPos pos, FluidState state) {
+        this.setFlowing(level, pos, this.getAmount(state)-1);
+    }
+
+    @Override
+    public boolean rainFluid(LevelAccessor level, BlockPos pos) {
+        BlockState blockstate = level.getBlockState(pos);
+        FluidSpreadType spreadType = getFluidSpreadType(blockstate);
+        if(spreadType == FluidSpreadType.REPLACE) {
+            if(!blockstate.isAir()) {
+                this.beforeDestroyingBlock(level, pos, blockstate);
+            }
+            this.setFlowing(level,pos,1);
+            return true;
+        }
+        else if(spreadType == FluidSpreadType.ADD) {
+            int otherAmount = blockstate.getFluidState().getAmount();
+            if(otherAmount < 8) {
+                this.setFlowing(level, pos, otherAmount + 1);
+                return true;
+            }
+
+        }
+        return false;
     }
 }
