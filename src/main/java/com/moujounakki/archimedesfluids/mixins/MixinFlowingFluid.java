@@ -1,6 +1,7 @@
 package com.moujounakki.archimedesfluids.mixins;
 
 import com.moujounakki.archimedesfluids.FluidSpreadType;
+import com.moujounakki.archimedesfluids.IMixinFlowingFluid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -18,7 +19,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(FlowingFluid.class)
 @SuppressWarnings("unused")
-public abstract class MixinFlowingFluid extends Fluid {
+public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
         FluidState fluidstate = blockstate.getFluidState();
@@ -104,6 +105,15 @@ public abstract class MixinFlowingFluid extends Fluid {
         }
         level.setBlock(pos, this.getFlowing(amount, this.isFallingAt(level, pos)).createLegacyBlock(), 3);
     }
+
+    @Override
+    public void changeFluid(Level level, BlockPos pos, int amount) {
+        int current = level.getFluidState(pos).getAmount();
+        if(current+amount > 8)
+            throw new IllegalArgumentException("Cannot add over 8 fluid(current %d, trying to add: %d)".formatted(current, amount));
+        this.setFlowing(level, pos, current+amount);
+    }
+
     @Shadow
     public abstract FluidState getFlowing(int p_75954_, boolean p_75955_);
     @Shadow
