@@ -25,7 +25,7 @@ public class FluidPool {
         HashSet<BlockPos> set = new HashSet<>();
         int foundFluid = 0;
         while(foundFluid < amount) {
-            BlockPos pos = explore();
+            BlockPos pos = explore(false);
             if(pos == null)
                 return false;
             FluidState fluidstate = level.getFluidState(pos);
@@ -46,7 +46,7 @@ public class FluidPool {
         HashSet<BlockPos> set = new HashSet<>();
         int foundSpace = 0;
         while(foundSpace < amount) {
-            BlockPos pos = explore();
+            BlockPos pos = explore(true);
             if(pos == null)
                 return false;
             if(level.getBlockState(pos).isAir()) {
@@ -69,7 +69,7 @@ public class FluidPool {
         return true;
     }
 
-    private BlockPos explore() {
+    private BlockPos explore(boolean lookForAir) {
         if(unexplored.isEmpty())
             return null;
         BlockPos pos = unexplored.removeFirst();
@@ -78,7 +78,7 @@ public class FluidPool {
             BlockPos pos1 = pos.relative(direction);
             if(explored.contains(pos1))
                 continue;
-            if(!level.getBlockState(pos1).isAir() && !level.getFluidState(pos1).getType().isSame(fluid))
+            if((!lookForAir || !level.getBlockState(pos1).isAir()) && !level.getFluidState(pos1).getType().isSame(fluid))
                 continue;
             unexplored.add(pos.relative(direction));
         }
