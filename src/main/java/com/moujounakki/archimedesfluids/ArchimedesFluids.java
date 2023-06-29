@@ -2,14 +2,18 @@ package com.moujounakki.archimedesfluids;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.FillBucketEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.PistonEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -81,5 +85,40 @@ public class ArchimedesFluids
         if(fluid.isSame(Fluids.EMPTY))
             return;
         ((IMixinFlowingFluid)fluid).moveFluidInWay(level, pos, state);
+    }
+
+    @SubscribeEvent
+    public void onFillBucket(FillBucketEvent event) {
+        Fluid fluid = ((BucketItem)(event.getEmptyBucket().getItem())).getFluid();
+        Level level = event.getLevel();
+        HitResult target = event.getTarget();
+        if(target == null)
+            return;
+        BlockPos pos = new BlockPos(target.getLocation());
+        Fluid fluid1 = level.getFluidState(pos).getType();
+        if(fluid == Fluids.EMPTY) {
+            if(fluid1 == Fluids.EMPTY) {
+                event.setCanceled(true);
+                return;
+            }
+            FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid1);
+            if(fluidPool.removeFluid(8)) {
+                event.setResult(Event.Result.ALLOW);
+            }
+            else
+                event.setCanceled(true);
+        }
+        else {
+            if(!level.getBlockState(pos).isAir() && !fluid1.isSame(fluid)) {
+                event.setCanceled(true);
+                return;
+            }
+            FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid);
+            if(fluidPool.addFluid(8)) {
+                event.setResult(Event.Result.ALLOW);
+            }
+            else
+                event.setCanceled(true);
+        }
     }
 }
