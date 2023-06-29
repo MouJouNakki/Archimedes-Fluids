@@ -68,6 +68,36 @@ public class FluidPool {
         }
         return true;
     }
+    public boolean checkForFluid(int amount) {
+        int foundFluid = 0;
+        while(foundFluid < amount) {
+            BlockPos pos = explore(false);
+            if(pos == null)
+                return false;
+            FluidState fluidstate = level.getFluidState(pos);
+            if(!fluidstate.getType().isSame(fluid))
+                continue;
+            foundFluid += fluidstate.getAmount();
+        }
+        return true;
+    }
+    public boolean checkForSpace(int amount) {
+        int foundSpace = 0;
+        while(foundSpace < amount) {
+            BlockPos pos = explore(true);
+            if(pos == null)
+                return false;
+            if(level.getBlockState(pos).isAir()) {
+                foundSpace += 8;
+                continue;
+            }
+            FluidState fluidstate = level.getFluidState(pos);
+            if(!fluidstate.getType().isSame(fluid))
+                continue;
+            foundSpace += 8-fluidstate.getAmount();
+        }
+        return true;
+    }
 
     private BlockPos explore(boolean lookForAir) {
         if(unexplored.isEmpty())
