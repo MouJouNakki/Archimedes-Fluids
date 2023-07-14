@@ -134,42 +134,4 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
         }
         return FluidSpreadType.BLOCKED;
     }
-    public boolean checkForFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
-        return findSpaceForFluid(level, pos, state) == null;
-    }
-    public void moveFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
-        BlockPos pos1 = findSpaceForFluid(level, pos, state);
-        assert pos1 != null;
-        BlockState blockstate1 = level.getBlockState(pos1);
-        FluidState fluidstate1 = blockstate1.getFluidState();
-        FluidSpreadType spreadType = this.getFluidSpreadType(blockstate1);
-        if(spreadType == FluidSpreadType.REPLACE) {
-            if(!blockstate1.isAir()) {
-                this.beforeDestroyingBlock(level, pos1, blockstate1);
-            }
-            this.transferFluid(level, pos, pos1, this.getAmount(state));
-        }
-        else if(spreadType == FluidSpreadType.ADD) {
-            int otherAmount = fluidstate1.getAmount();
-            this.transferFluid(level, pos, pos1, this.getAmount(state));
-        }
-    }
-    private BlockPos findSpaceForFluid(LevelAccessor level, BlockPos pos, FluidState state) {
-        for(Direction direction : Direction.allShuffled(level.getRandom())) {
-            BlockPos pos1 = pos.relative(direction);
-            BlockState blockstate1 = level.getBlockState(pos1);
-            FluidState fluidstate1 = blockstate1.getFluidState();
-            FluidSpreadType spreadType = this.getFluidSpreadType(blockstate1);
-            if(spreadType == FluidSpreadType.REPLACE) {
-                return pos1;
-            }
-            else if(spreadType == FluidSpreadType.ADD) {
-                int otherAmount = fluidstate1.getType().getAmount(fluidstate1);
-                if(this.getAmount(state)+otherAmount <= 8) {
-                    return pos1;
-                }
-            }
-        }
-        return null;
-    }
 }

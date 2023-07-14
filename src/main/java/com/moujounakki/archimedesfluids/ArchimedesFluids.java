@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -21,6 +22,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -47,11 +49,6 @@ public class ArchimedesFluids
             return;
         FluidState state = event.getBlockSnapshot().getReplacedBlock().getFluidState();
         Fluid fluid = state.getType();
-//        if(checkForFluidInWay(event.getLevel(), event.getPos(), state)) {
-//            event.setCanceled(true);
-//        }
-//        else
-//            moveFluidInWay(event.getLevel(), event.getPos(), state);
         if(fluid.isSame(Fluids.EMPTY))
             return;
         FluidPool fluidPool = new FluidPool((Level)event.getLevel(), event.getPos(), fluid);
@@ -60,37 +57,42 @@ public class ArchimedesFluids
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onPistonMovePre(PistonEvent.Pre event) {
-        if(!(event.getLevel() instanceof Level))
+        if (!(event.getLevel() instanceof Level))
             return;
-        List<BlockPos> toDestroy = Objects.requireNonNull(event.getStructureHelper()).getToDestroy();
+        PistonStructureResolver structureResolver = event.getStructureHelper();
+        if(structureResolver == null)
+            return;
+        structureResolver.resolve();
+        List<BlockPos> toDestroy = Objects.requireNonNull(structureResolver).getToDestroy();
         LevelAccessor level = event.getLevel();
-//        boolean failure = false;
-//        for(BlockPos pos : toDestroy) {
-//            if(checkForFluidInWay(level, pos, level.getFluidState(pos))) {
-//                failure = true;
-//                break;
-//            }
-//        }
-//        if(failure) {
-//            event.setCanceled(true);
-//        }
-//        else {
-//            for(BlockPos pos : toDestroy) {
-//                moveFluidInWay(level, pos, level.getFluidState(pos));
-//            }
-//        }
-    }
-    private boolean checkForFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
-        Fluid fluid = state.getType();
-        if(fluid.isSame(Fluids.EMPTY))
-            return false;
-        return ((IMixinFlowingFluid)fluid).checkForFluidInWay(level, pos, state);
-    }
-    private void moveFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
-        Fluid fluid = state.getType();
-        if(fluid.isSame(Fluids.EMPTY))
-            return;
-        ((IMixinFlowingFluid)fluid).moveFluidInWay(level, pos, state);
+        for (BlockPos pos : toDestroy) {
+            FluidState fluidState = level.getFluidState(pos);
+            if (fluidState.isEmpty()) {
+                continue;
+            }
+            FluidPool fluidPool = new FluidPool((Level)level, pos, fluidState.getType());
+            for (BlockPos pos1 : toDestroy) {
+                fluidPool.setBanned(pos1);
+            }
+            if(!fluidPool.checkForSpace(fluidState.getAmount())) {
+                event.setCanceled(true);
+                return;
+            }
+        }
+        for (BlockPos pos : toDestroy) {
+            FluidState fluidState = level.getFluidState(pos);
+            if (fluidState.isEmpty()) {
+                continue;
+            }
+            FluidPool fluidPool = new FluidPool((Level)level, pos, fluidState.getType());
+            for (BlockPos pos1 : toDestroy) {
+                fluidPool.setBanned(pos1);
+            }
+            if(!fluidPool.addFluid(fluidState.getAmount())) {
+                event.setCanceled(true);
+                return;
+            }
+        }
     }
 
     @SubscribeEvent
