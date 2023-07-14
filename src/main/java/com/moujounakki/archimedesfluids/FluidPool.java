@@ -82,6 +82,8 @@ public class FluidPool {
             BlockPos pos = explore(false);
             if(pos == null)
                 return false;
+            if(banned.contains(pos))
+                continue;
             FluidState fluidstate = level.getFluidState(pos);
             if(!fluidstate.getType().isSame(fluid))
                 continue;
@@ -95,6 +97,8 @@ public class FluidPool {
             BlockPos pos = explore(true);
             if(pos == null)
                 return false;
+            if(banned.contains(pos))
+                continue;
             if(level.getBlockState(pos).isAir()) {
                 foundSpace += 8;
                 continue;
