@@ -46,11 +46,17 @@ public class ArchimedesFluids
         if(!(event.getLevel() instanceof Level))
             return;
         FluidState state = event.getBlockSnapshot().getReplacedBlock().getFluidState();
-        if(checkForFluidInWay(event.getLevel(), event.getPos(), state)) {
+        Fluid fluid = state.getType();
+//        if(checkForFluidInWay(event.getLevel(), event.getPos(), state)) {
+//            event.setCanceled(true);
+//        }
+//        else
+//            moveFluidInWay(event.getLevel(), event.getPos(), state);
+        if(fluid.isSame(Fluids.EMPTY))
+            return;
+        FluidPool fluidPool = new FluidPool((Level)event.getLevel(), event.getPos(), fluid);
+        if(!fluidPool.addFluid(state.getAmount()))
             event.setCanceled(true);
-        }
-        else
-            moveFluidInWay(event.getLevel(), event.getPos(), state);
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onPistonMovePre(PistonEvent.Pre event) {
@@ -58,21 +64,21 @@ public class ArchimedesFluids
             return;
         List<BlockPos> toDestroy = Objects.requireNonNull(event.getStructureHelper()).getToDestroy();
         LevelAccessor level = event.getLevel();
-        boolean failure = false;
-        for(BlockPos pos : toDestroy) {
-            if(checkForFluidInWay(level, pos, level.getFluidState(pos))) {
-                failure = true;
-                break;
-            }
-        }
-        if(failure) {
-            event.setCanceled(true);
-        }
-        else {
-            for(BlockPos pos : toDestroy) {
-                moveFluidInWay(level, pos, level.getFluidState(pos));
-            }
-        }
+//        boolean failure = false;
+//        for(BlockPos pos : toDestroy) {
+//            if(checkForFluidInWay(level, pos, level.getFluidState(pos))) {
+//                failure = true;
+//                break;
+//            }
+//        }
+//        if(failure) {
+//            event.setCanceled(true);
+//        }
+//        else {
+//            for(BlockPos pos : toDestroy) {
+//                moveFluidInWay(level, pos, level.getFluidState(pos));
+//            }
+//        }
     }
     private boolean checkForFluidInWay(LevelAccessor level, BlockPos pos, FluidState state) {
         Fluid fluid = state.getType();
