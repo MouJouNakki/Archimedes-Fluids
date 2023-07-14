@@ -14,11 +14,15 @@ public class FluidPool {
     private final Fluid fluid;
     private final HashSet<BlockPos> explored = new HashSet<>();
     private final LinkedList<BlockPos> unexplored = new LinkedList<>();
+    private final HashSet<BlockPos> banned = new HashSet<>();
 
     public FluidPool(Level level, BlockPos pos, Fluid fluid) {
         this.level = level;
         this.unexplored.add(pos);
         this.fluid = fluid;
+    }
+    public void setBanned(BlockPos pos) {
+        banned.add(pos);
     }
 
     public boolean removeFluid(int amount) {
@@ -28,6 +32,8 @@ public class FluidPool {
             BlockPos pos = explore(false);
             if(pos == null)
                 return false;
+            if(banned.contains(pos))
+                continue;
             FluidState fluidstate = level.getFluidState(pos);
             if(!fluidstate.getType().isSame(fluid))
                 continue;
@@ -49,6 +55,8 @@ public class FluidPool {
             BlockPos pos = explore(true);
             if(pos == null)
                 return false;
+            if(banned.contains(pos))
+                continue;
             if(level.getBlockState(pos).isAir()) {
                 set.add(pos);
                 foundSpace += 8;
