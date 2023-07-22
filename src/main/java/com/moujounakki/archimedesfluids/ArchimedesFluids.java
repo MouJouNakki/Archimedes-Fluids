@@ -6,6 +6,7 @@ import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -35,6 +36,7 @@ public class ArchimedesFluids
     public static final String MODID = "archimedesfluids";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
+    public static final IntegerProperty WATER_LEVEL = IntegerProperty.create("water_level",0,8);
 
     public ArchimedesFluids()
     {
