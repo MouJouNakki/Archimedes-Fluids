@@ -105,7 +105,7 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
     }
     private void setFlowing(LevelAccessor level, BlockPos pos, int amount) {
         BlockState blockState = level.getBlockState(pos);
-        if(isSame(Fluids.WATER) && blockState.hasProperty(BlockStateProperties.WATERLOGGED)) {
+        if(isSame(Fluids.WATER) && blockState.hasProperty(ArchimedesFluids.WATER_LEVEL)) {
             level.setBlock(pos, blockState.setValue(ArchimedesFluids.WATER_LEVEL, amount),3);
         }
         if(amount < 1) {
@@ -140,7 +140,7 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
         else if(fluidstate.getType().isSame(this)) {
             return FluidSpreadType.ADD;
         }
-        else if(isSame(Fluids.WATER) && blockstate.hasProperty(BlockStateProperties.WATERLOGGED)) {
+        else if(isSame(Fluids.WATER) && blockstate.hasProperty(ArchimedesFluids.WATER_LEVEL)) {
             return FluidSpreadType.ADD;
         }
         return FluidSpreadType.BLOCKED;

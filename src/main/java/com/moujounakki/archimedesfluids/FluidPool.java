@@ -133,6 +133,6 @@ public class FluidPool {
 
     private boolean canBeWaterlogged(BlockPos pos) {
         BlockState blockState = level.getBlockState(pos);
-        return fluid.isSame(Fluids.WATER) && blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(ArchimedesFluids.WATER_LEVEL) <= 0;
+        return fluid.isSame(Fluids.WATER) && blockState.hasProperty(ArchimedesFluids.WATER_LEVEL) && blockState.getValue(ArchimedesFluids.WATER_LEVEL) <= 0;
     }
 }
