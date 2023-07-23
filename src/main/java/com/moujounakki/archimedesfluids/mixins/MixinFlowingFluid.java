@@ -16,6 +16,8 @@ import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -143,4 +145,86 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
         }
         return FluidSpreadType.BLOCKED;
     }
+    @Overwrite
+    public float getHeight(FluidState state, BlockGetter blockGetter, BlockPos pos) {
+        if(hasSameAbove(state, blockGetter, pos))
+            return 1.0F;
+        int found = 0;
+        int amount = state.getAmount();
+        for(Direction direction : Direction.Plane.HORIZONTAL) {
+            FluidState state1 = blockGetter.getFluidState(pos.relative(direction));
+            if(!state1.getType().isSame(this)) {
+                continue;
+            }
+            if(state1.getAmount() != amount+1) {
+                continue;
+            }
+            found++;
+            if(found == 2)
+                break;
+        }
+        if(found == 2)
+            return (amount+1)/9.0F;
+        return state.getOwnHeight();
+    }
+    @Overwrite
+    public Vec3 getFlow(BlockGetter blockGetter, BlockPos pos, FluidState state) {
+        double d0 = 0.0D;
+        double d1 = 0.0D;
+        BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+        float stateHeight = state.getType().getHeight(state, blockGetter, pos);
+
+        for(Direction direction : Direction.Plane.HORIZONTAL) {
+            blockpos$mutableblockpos.setWithOffset(pos, direction);
+            FluidState fluidstate = blockGetter.getFluidState(blockpos$mutableblockpos);
+            if (this.affectsFlow(fluidstate)) {
+                float f = fluidstate.getType().getHeight(fluidstate, blockGetter, blockpos$mutableblockpos);
+                float f1 = 0.0F;
+                if (f == 0.0F) {
+                    if (!blockGetter.getBlockState(blockpos$mutableblockpos).getMaterial().blocksMotion()) {
+                        BlockPos blockpos = blockpos$mutableblockpos.below();
+                        FluidState fluidstate1 = blockGetter.getFluidState(blockpos);
+                        if (this.affectsFlow(fluidstate1)) {
+                            f = fluidstate1.getType().getHeight(fluidstate1, blockGetter, blockpos);
+                            if (f > 0.0F) {
+                                f1 = stateHeight - (f - 0.8888889F);
+                            }
+                        }
+                    }
+                } else if (f > 0.0F) {
+                    f1 = stateHeight - f;
+                }
+
+                if (f1 != 0.0F) {
+                    d0 += (double)((float)direction.getStepX() * f1);
+                    d1 += (double)((float)direction.getStepZ() * f1);
+                }
+            }
+        }
+
+        Vec3 vec3 = new Vec3(d0, 0.0D, d1);
+        if (state.getValue(FALLING)) {
+            for(Direction direction1 : Direction.Plane.HORIZONTAL) {
+                blockpos$mutableblockpos.setWithOffset(pos, direction1);
+                if (this.isSolidFace(blockGetter, blockpos$mutableblockpos, direction1) || this.isSolidFace(blockGetter, blockpos$mutableblockpos.above(), direction1)) {
+                    vec3 = vec3.normalize().add(0.0D, -6.0D, 0.0D);
+                    break;
+                }
+            }
+        }
+
+        return vec3.normalize();
+    }
+    @Shadow
+    protected abstract boolean isSolidFace(BlockGetter p_75991_, BlockPos p_75992_, Direction p_75993_);
+    @Shadow
+    private boolean affectsFlow(FluidState p_76095_) {
+        return false;
+    }
+    @Shadow
+    private static boolean hasSameAbove(FluidState p_76089_, BlockGetter p_76090_, BlockPos p_76091_) {
+        return false;
+    }
+    @Shadow
+    public static final BooleanProperty FALLING = BlockStateProperties.FALLING;
 }
