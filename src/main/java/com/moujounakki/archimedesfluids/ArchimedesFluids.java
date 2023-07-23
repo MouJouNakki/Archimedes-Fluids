@@ -3,6 +3,8 @@ package com.moujounakki.archimedesfluids;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
@@ -111,7 +113,9 @@ public class ArchimedesFluids
             }
             FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid1);
             if(fluidPool.removeFluid(8)) {
+                event.setFilledBucket(new ItemStack(fluid1.getBucket()));
                 event.setResult(Event.Result.ALLOW);
+                ((BucketItem)(event.getEmptyBucket().getItem())).checkExtraContent(event.getEntity(), level, event.getEmptyBucket(), pos);
             }
             else
                 event.setCanceled(true);
@@ -123,7 +127,9 @@ public class ArchimedesFluids
             }
             FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid);
             if(fluidPool.addFluid(8)) {
+                event.setFilledBucket(new ItemStack(Items.BUCKET));
                 event.setResult(Event.Result.ALLOW);
+                ((BucketItem)(event.getEmptyBucket().getItem())).checkExtraContent(event.getEntity(), level, event.getEmptyBucket(), pos);
             }
             else
                 event.setCanceled(true);
