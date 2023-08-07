@@ -38,7 +38,8 @@ public class ArchimedesFluids
     public static final String MODID = "archimedesfluids";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
-    public static final IntegerProperty WATER_LEVEL = IntegerProperty.create("water_level",0,8);
+    public static final FluidloggingProperty FLUIDLOGGED = new FluidloggingProperty();
+    public static final IntegerProperty FLUID_LEVEL = IntegerProperty.create("fluid_level",0,8);
 
     public ArchimedesFluids()
     {

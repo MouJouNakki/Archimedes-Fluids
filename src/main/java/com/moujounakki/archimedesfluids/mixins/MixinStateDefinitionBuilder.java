@@ -24,6 +24,6 @@ public abstract class MixinStateDefinitionBuilder<O, S extends StateHolder<O, S>
         if(owner instanceof WallBlock)
             return;
         if(property == BlockStateProperties.WATERLOGGED)
-            add(ArchimedesFluids.WATER_LEVEL);
+            add(ArchimedesFluids.FLUIDLOGGED, ArchimedesFluids.FLUID_LEVEL);
     }
 }

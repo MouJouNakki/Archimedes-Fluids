@@ -4,10 +4,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -60,7 +58,7 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            if(level.getBlockState(pos).isAir() || canBeWaterlogged(pos)) {
+            if(level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
                 set.add(pos);
                 foundSpace += 8;
                 continue;
@@ -102,7 +100,7 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            if(level.getBlockState(pos).isAir() || canBeWaterlogged(pos)) {
+            if(level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
                 foundSpace += 8;
                 continue;
             }
@@ -123,7 +121,7 @@ public class FluidPool {
             BlockPos pos1 = pos.relative(direction);
             if(explored.contains(pos1))
                 continue;
-            boolean checkForAir = !lookForAir || !(level.getBlockState(pos1).isAir() || canBeWaterlogged(pos1));
+            boolean checkForAir = !lookForAir || !(level.getBlockState(pos1).isAir() || canBeFluidlogged(pos1));
             if(checkForAir && !level.getFluidState(pos1).getType().isSame(fluid))
                 continue;
             unexplored.add(pos.relative(direction));
@@ -131,8 +129,8 @@ public class FluidPool {
         return pos;
     }
 
-    private boolean canBeWaterlogged(BlockPos pos) {
+    private boolean canBeFluidlogged(BlockPos pos) {
         BlockState blockState = level.getBlockState(pos);
-        return fluid.isSame(Fluids.WATER) && blockState.hasProperty(ArchimedesFluids.WATER_LEVEL) && blockState.getValue(ArchimedesFluids.WATER_LEVEL) <= 0;
+        return blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL) && blockState.getValue(ArchimedesFluids.FLUID_LEVEL) <= 0;
     }
 }
