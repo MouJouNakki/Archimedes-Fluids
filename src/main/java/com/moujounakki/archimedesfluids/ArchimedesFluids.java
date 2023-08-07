@@ -7,6 +7,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlockContainer;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -48,6 +51,9 @@ public class ArchimedesFluids
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         if(!(event.getLevel() instanceof Level))
+            return;
+        Block placing = event.getPlacedBlock().getBlock();
+        if(placing instanceof LiquidBlockContainer && !(placing instanceof SimpleWaterloggedBlock))
             return;
         FluidState state = event.getBlockSnapshot().getReplacedBlock().getFluidState();
         Fluid fluid = state.getType();
