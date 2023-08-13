@@ -3,6 +3,7 @@ package com.moujounakki.archimedesfluids;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 
@@ -57,7 +58,7 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            if(level.getBlockState(pos).isAir()) {
+            if(level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
                 set.add(pos);
                 foundSpace += 8;
                 continue;
@@ -99,7 +100,7 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            if(level.getBlockState(pos).isAir()) {
+            if(level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
                 foundSpace += 8;
                 continue;
             }
@@ -120,10 +121,16 @@ public class FluidPool {
             BlockPos pos1 = pos.relative(direction);
             if(explored.contains(pos1))
                 continue;
-            if((!lookForAir || !level.getBlockState(pos1).isAir()) && !level.getFluidState(pos1).getType().isSame(fluid))
+            boolean checkForAir = !lookForAir || !(level.getBlockState(pos1).isAir() || canBeFluidlogged(pos1));
+            if(checkForAir && !level.getFluidState(pos1).getType().isSame(fluid))
                 continue;
             unexplored.add(pos.relative(direction));
         }
         return pos;
+    }
+
+    private boolean canBeFluidlogged(BlockPos pos) {
+        BlockState blockState = level.getBlockState(pos);
+        return blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL) && blockState.getValue(ArchimedesFluids.FLUID_LEVEL) <= 0;
     }
 }

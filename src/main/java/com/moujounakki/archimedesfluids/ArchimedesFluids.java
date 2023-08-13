@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlockContainer;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -40,6 +41,8 @@ public class ArchimedesFluids
     public static final String MODID = "archimedesfluids";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
+    public static final FluidloggingProperty FLUIDLOGGED = new FluidloggingProperty();
+    public static final IntegerProperty FLUID_LEVEL = IntegerProperty.create("fluid_level",0,8);
 
     public ArchimedesFluids()
     {

@@ -2,6 +2,9 @@
   "required": true,
   "package": "com.moujounakki.archimedesfluids.mixins",
   "mixins": [
-    "MixinFlowingFluid"
+    "MixinFlowingFluid",
+    "MixinBlockBehaviour",
+    "MixinStateDefinitionBuilder",
+    "MixinBlockStateBase"
   ]
 }
