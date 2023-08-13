@@ -18,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockBehaviour.class)
-@SuppressWarnings("unused")
 public abstract class MixinBlockBehaviour {
     @Overwrite
     public FluidState getFluidState(BlockState state) {
