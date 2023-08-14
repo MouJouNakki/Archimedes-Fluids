@@ -24,6 +24,9 @@ import org.spongepowered.asm.mixin.Shadow;
 @SuppressWarnings("unused")
 public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFluid {
     public void tick(Level level, BlockPos pos, FluidState state) {
+        FluidTicker.addTick(this, level, pos, state);
+    }
+    public void runTick(Level level, BlockPos pos, FluidState state) {
         BlockState blockstate = level.getBlockState(pos.below());
         FluidState fluidstate = blockstate.getFluidState();
         FluidSpreadType spreadType = this.getFluidSpreadType(blockstate);
