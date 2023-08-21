@@ -16,6 +16,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
 import net.minecraftforge.event.level.BlockEvent;
@@ -113,7 +114,8 @@ public class ArchimedesFluids
         HitResult target = event.getTarget();
         if(target == null)
             return;
-        BlockPos pos = new BlockPos(target.getLocation());
+        Vec3 location = target.getLocation();
+        BlockPos pos = new BlockPos((int) Math.floor(location.x()), (int) Math.floor(location.y()), (int) Math.floor(location.z()));
         Fluid fluid1 = level.getFluidState(pos).getType();
         if(fluid == Fluids.EMPTY) {
             if(fluid1 == Fluids.EMPTY) {

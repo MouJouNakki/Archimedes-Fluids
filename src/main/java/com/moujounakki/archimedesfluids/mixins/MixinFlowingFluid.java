@@ -188,7 +188,7 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
                 float f = fluidstate.getType().getHeight(fluidstate, blockGetter, blockpos$mutableblockpos);
                 float f1 = 0.0F;
                 if (f == 0.0F) {
-                    if (!blockGetter.getBlockState(blockpos$mutableblockpos).getMaterial().blocksMotion()) {
+                    if (!blockGetter.getBlockState(blockpos$mutableblockpos).blocksMotion()) {
                         BlockPos blockpos = blockpos$mutableblockpos.below();
                         FluidState fluidstate1 = blockGetter.getFluidState(blockpos);
                         if (this.affectsFlow(fluidstate1)) {
