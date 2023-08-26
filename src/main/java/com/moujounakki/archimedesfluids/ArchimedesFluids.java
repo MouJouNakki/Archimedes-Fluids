@@ -1,6 +1,7 @@
 package com.moujounakki.archimedesfluids;
 
 import com.mojang.logging.LogUtils;
+import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.ItemStack;
@@ -17,31 +18,17 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.FillBucketEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.level.PistonEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
-// The value here should match an entry in the META-INF/mods.toml file
-@Mod(ArchimedesFluids.MODID)
 @SuppressWarnings("unused")
-public class ArchimedesFluids
+public class ArchimedesFluids implements ModInitializer
 {
-    // Define mod id in a common place for everything to reference
-    public static final String MODID = "archimedesfluids";
-    // Directly reference a slf4j logger
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LoggerFactory.getLogger("archimedesfluids");
     public static final FluidloggingProperty FLUIDLOGGED = new FluidloggingProperty();
     public static final IntegerProperty FLUID_LEVEL = IntegerProperty.create("fluid_level",0,8);
 
@@ -145,5 +132,10 @@ public class ArchimedesFluids
             else
                 event.setCanceled(true);
         }
+    }
+
+    @Override
+    public void onInitialize() {
+
     }
 }

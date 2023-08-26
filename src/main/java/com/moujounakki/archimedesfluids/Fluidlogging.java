@@ -3,7 +3,6 @@ package com.moujounakki.archimedesfluids;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 public class Fluidlogging implements Comparable<Fluidlogging> {

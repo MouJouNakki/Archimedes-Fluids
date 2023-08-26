@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "archimedesfluids",
+	"version": "${version}",
+	"name": "Archimedes' Fluids",
+	"description": "Makes fluids flow more realistically",
+	"authors": [
+		"MouJouNakki"
+	],
+	"contact": {
+		"homepage": "https://github.com/MouJouNakki/Archimedes-Fluids",
+		"sources": "https://github.com/MouJouNakki/Archimedes-Fluids"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/modid/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.moujounakki.archimedesfluids"
+		]
+	},
+	"mixins": [
+		"archimedesfluids.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
