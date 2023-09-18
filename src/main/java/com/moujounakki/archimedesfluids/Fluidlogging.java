@@ -1,14 +1,14 @@
 package com.moujounakki.archimedesfluids;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.material.FlowingFluid;
-import net.minecraft.world.level.material.Fluid;
+//import net.minecraft.resources.ResourceLocation;
+import net.minecraft.fluid.FlowableFluid;
+//import net.minecraft.world.level.material.Fluid;
 import org.jetbrains.annotations.NotNull;
 
 public class Fluidlogging implements Comparable<Fluidlogging> {
-    public final Fluid fluid;
+    public final FlowableFluid fluid;
     public final String name;
-    public Fluidlogging(Fluid fluid, String name) {
+    public Fluidlogging(FlowableFluid fluid, String name) {
         this.fluid = fluid;
         this.name = name;
     }

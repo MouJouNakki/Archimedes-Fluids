@@ -1,24 +1,24 @@
 package com.moujounakki.archimedesfluids;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
+import net.minecraft.block.BlockState;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.FluidState;
 
 import java.util.HashSet;
 import java.util.LinkedList;
 
 public class FluidPool {
-    private final Level level;
+    private final World world;
     private final Fluid fluid;
     private final HashSet<BlockPos> explored = new HashSet<>();
     private final LinkedList<BlockPos> unexplored = new LinkedList<>();
     private final HashSet<BlockPos> banned = new HashSet<>();
 
-    public FluidPool(Level level, BlockPos pos, Fluid fluid) {
-        this.level = level;
+    public FluidPool(World world, BlockPos pos, Fluid fluid) {
+        this.world = world;
         this.unexplored.add(pos);
         this.fluid = fluid;
     }
@@ -35,17 +35,17 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            FluidState fluidstate = level.getFluidState(pos);
-            if(!fluidstate.getType().isSame(fluid))
+            FluidState fluidstate = world.getFluidState(pos);
+            if(!fluidstate.getFluid().matchesType(fluid))
                 continue;
             set.add(pos);
-            foundFluid += fluidstate.getAmount();
+            foundFluid += fluidstate.getLevel();
         }
         for(BlockPos pos : set) {
-            FluidState fluidstate = level.getFluidState(pos);
-            int transfer = Math.min(fluidstate.getAmount(),amount);
+            FluidState fluidstate = world.getFluidState(pos);
+            int transfer = Math.min(fluidstate.getLevel(),amount);
             amount -= transfer;
-            ((IMixinFlowingFluid)fluid).changeFluid(level,pos,-transfer);
+            ((IMixinFlowingFluid)fluid).changeFluid(world,pos,-transfer);
         }
         return true;
     }
@@ -58,22 +58,22 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            if(level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
+            if(world.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
                 set.add(pos);
                 foundSpace += 8;
                 continue;
             }
-            FluidState fluidstate = level.getFluidState(pos);
-            if(!fluidstate.getType().isSame(fluid))
+            FluidState fluidstate = world.getFluidState(pos);
+            if(!fluidstate.getFluid().matchesType(fluid))
                 continue;
             set.add(pos);
-            foundSpace += 8-fluidstate.getAmount();
+            foundSpace += 8-fluidstate.getLevel();
         }
         for(BlockPos pos : set) {
-            FluidState fluidstate = level.getFluidState(pos);
-            int transfer = Math.min(8-fluidstate.getAmount(),amount);
+            FluidState fluidstate = world.getFluidState(pos);
+            int transfer = Math.min(8-fluidstate.getLevel(),amount);
             amount -= transfer;
-            ((IMixinFlowingFluid)fluid).changeFluid(level,pos,transfer);
+            ((IMixinFlowingFluid)fluid).changeFluid(world,pos,transfer);
         }
         return true;
     }
@@ -85,10 +85,10 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            FluidState fluidstate = level.getFluidState(pos);
-            if(!fluidstate.getType().isSame(fluid))
+            FluidState fluidstate = world.getFluidState(pos);
+            if(!fluidstate.getFluid().matchesType(fluid))
                 continue;
-            foundFluid += fluidstate.getAmount();
+            foundFluid += fluidstate.getLevel();
         }
         return true;
     }
@@ -100,14 +100,14 @@ public class FluidPool {
                 return false;
             if(banned.contains(pos))
                 continue;
-            if(level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
+            if(world.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
                 foundSpace += 8;
                 continue;
             }
-            FluidState fluidstate = level.getFluidState(pos);
-            if(!fluidstate.getType().isSame(fluid))
+            FluidState fluidstate = world.getFluidState(pos);
+            if(!fluidstate.getFluid().matchesType(fluid))
                 continue;
-            foundSpace += 8-fluidstate.getAmount();
+            foundSpace += 8-fluidstate.getLevel();
         }
         return true;
     }
@@ -118,19 +118,19 @@ public class FluidPool {
         BlockPos pos = unexplored.removeFirst();
         explored.add(pos);
         for(Direction direction : Direction.values()) {
-            BlockPos pos1 = pos.relative(direction);
+            BlockPos pos1 = pos.offset(direction);
             if(explored.contains(pos1))
                 continue;
-            boolean checkForAir = !lookForAir || !(level.getBlockState(pos1).isAir() || canBeFluidlogged(pos1));
-            if(checkForAir && !level.getFluidState(pos1).getType().isSame(fluid))
+            boolean checkForAir = !lookForAir || !(world.getBlockState(pos1).isAir() || canBeFluidlogged(pos1));
+            if(checkForAir && !world.getFluidState(pos1).getFluid().matchesType(fluid))
                 continue;
-            unexplored.add(pos.relative(direction));
+            unexplored.add(pos.offset(direction));
         }
         return pos;
     }
 
     private boolean canBeFluidlogged(BlockPos pos) {
-        BlockState blockState = level.getBlockState(pos);
-        return blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL) && blockState.getValue(ArchimedesFluids.FLUID_LEVEL) <= 0;
+        BlockState blockState = world.getBlockState(pos);
+        return blockState.contains(ArchimedesFluids.FLUID_LEVEL) && blockState.get(ArchimedesFluids.FLUID_LEVEL) <= 0;
     }
 }

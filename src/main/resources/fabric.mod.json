@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.moujounakki.archimedesfluids"
+			"com.moujounakki.archimedesfluids.ArchimedesFluids"
 		]
 	},
 	"mixins": [

@@ -2,10 +2,11 @@ package com.moujounakki.archimedesfluids;
 
 //import net.minecraft.core.Registry;
 //import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.fluid.FlowableFluid;
+import net.minecraft.state.property.Property;
 //import net.minecraft.world.level.material.FlowingFluid;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.Fluids;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
 //import net.minecraftforge.registries.ForgeRegistries;
 //import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +17,7 @@ public class FluidloggingProperty extends Property<Fluidlogging> {
         super("fluidlogged", Fluidlogging.class);
     }
     private static Fluidlogging[] values;
-    private static Fluidlogging[] getValues() {
+    private static Fluidlogging[] getFluidloggings() {
         if(values == null) {
             values = new Fluidlogging[]{new Fluidlogging(Fluids.FLOWING_WATER, "9minecraftflowing_water"),
                     new Fluidlogging(Fluids.FLOWING_LAVA, "9minecraftflowing_lava"),
@@ -25,16 +26,16 @@ public class FluidloggingProperty extends Property<Fluidlogging> {
         }
         return values;
     }
-    public static Fluidlogging getFluidLogging(Fluid fluid) {
-        for(Fluidlogging fluidlogging : getValues()) {
+    public static Fluidlogging getFluidLogging(FlowableFluid fluid) {
+        for(Fluidlogging fluidlogging : getFluidloggings()) {
             if(fluidlogging.fluid == fluid)
                 return fluidlogging;
         }
         return null;
     }
     @Override
-    public Collection<Fluidlogging> getPossibleValues() {
-        return List.of(FluidloggingProperty.getValues());
+    public Collection<Fluidlogging> getValues() {
+        return List.of(FluidloggingProperty.getFluidloggings());
 //        Collection<Fluidlogging> collection = new ArrayList<>();
 //        for(Fluid fluid : ForgeRegistries.FLUIDS.getValues())
 //            collection.add(new Fluidlogging(fluid));
@@ -42,12 +43,12 @@ public class FluidloggingProperty extends Property<Fluidlogging> {
     }
 
     @Override
-    public String getName(Fluidlogging fluidlogging) {
+    public String name(Fluidlogging fluidlogging) {
         return fluidlogging.name;
     }
 
     @Override
-    public Optional<Fluidlogging> getValue(String string) {
+    public Optional<Fluidlogging> parse(String string) {
         for(Fluidlogging fluidlogging : getValues()) {
             if(fluidlogging.name.equals(string))
                 return Optional.of(fluidlogging);

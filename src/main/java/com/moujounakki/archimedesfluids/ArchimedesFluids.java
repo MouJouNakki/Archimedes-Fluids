@@ -1,27 +1,30 @@
 package com.moujounakki.archimedesfluids;
 
-import com.mojang.logging.LogUtils;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.BucketItem;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.LiquidBlockContainer;
-import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.piston.PistonStructureResolver;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.minecraft.block.Block;
+import net.minecraft.block.FluidFillable;
+import net.minecraft.block.Waterloggable;
+import net.minecraft.block.piston.PistonHandler;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.BucketItem;
+import net.minecraft.item.BlockItem;
+import net.minecraft.state.property.IntProperty;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,112 +33,79 @@ public class ArchimedesFluids implements ModInitializer
 {
     public static final Logger LOGGER = LoggerFactory.getLogger("archimedesfluids");
     public static final FluidloggingProperty FLUIDLOGGED = new FluidloggingProperty();
-    public static final IntegerProperty FLUID_LEVEL = IntegerProperty.create("fluid_level",0,8);
-
-    public ArchimedesFluids()
-    {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-
-        // Register ourselves for server and other game events we are interested in
-        MinecraftForge.EVENT_BUS.register(this);
-    }
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
-        if(!(event.getLevel() instanceof Level))
-            return;
-        Block placing = event.getPlacedBlock().getBlock();
-        if(placing instanceof LiquidBlockContainer && !(placing instanceof SimpleWaterloggedBlock))
-            return;
-        FluidState state = event.getBlockSnapshot().getReplacedBlock().getFluidState();
-        Fluid fluid = state.getType();
-        if(fluid.isSame(Fluids.EMPTY))
-            return;
-        FluidPool fluidPool = new FluidPool((Level)event.getLevel(), event.getPos(), fluid);
-        if(!fluidPool.addFluid(state.getAmount()))
-            event.setCanceled(true);
-    }
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onPistonMovePre(PistonEvent.Pre event) {
-        if (!(event.getLevel() instanceof Level))
-            return;
-        PistonStructureResolver structureResolver = event.getStructureHelper();
-        if(structureResolver == null)
-            return;
-        structureResolver.resolve();
-        List<BlockPos> toDestroy = Objects.requireNonNull(structureResolver).getToDestroy();
-        LevelAccessor level = event.getLevel();
-        for (BlockPos pos : toDestroy) {
-            FluidState fluidState = level.getFluidState(pos);
-            if (fluidState.isEmpty()) {
-                continue;
-            }
-            FluidPool fluidPool = new FluidPool((Level)level, pos, fluidState.getType());
-            for (BlockPos pos1 : toDestroy) {
-                fluidPool.setBanned(pos1);
-            }
-            if(!fluidPool.checkForSpace(fluidState.getAmount())) {
-                event.setCanceled(true);
-                return;
-            }
-        }
-        for (BlockPos pos : toDestroy) {
-            FluidState fluidState = level.getFluidState(pos);
-            if (fluidState.isEmpty()) {
-                continue;
-            }
-            FluidPool fluidPool = new FluidPool((Level)level, pos, fluidState.getType());
-            for (BlockPos pos1 : toDestroy) {
-                fluidPool.setBanned(pos1);
-            }
-            if(!fluidPool.addFluid(fluidState.getAmount())) {
-                event.setCanceled(true);
-                return;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void onFillBucket(FillBucketEvent event) {
-        Fluid fluid = ((BucketItem)(event.getEmptyBucket().getItem())).getFluid();
-        Level level = event.getLevel();
-        HitResult target = event.getTarget();
-        if(target == null)
-            return;
-        Vec3 location = target.getLocation();
-        BlockPos pos = new BlockPos((int) Math.floor(location.x()), (int) Math.floor(location.y()), (int) Math.floor(location.z()));
-        Fluid fluid1 = level.getFluidState(pos).getType();
-        if(fluid == Fluids.EMPTY) {
-            if(fluid1 == Fluids.EMPTY) {
-                event.setCanceled(true);
-                return;
-            }
-            FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid1);
-            if(fluidPool.removeFluid(8)) {
-                event.setFilledBucket(new ItemStack(fluid1.getBucket()));
-                event.setResult(Event.Result.ALLOW);
-                ((BucketItem)(event.getEmptyBucket().getItem())).checkExtraContent(event.getEntity(), level, event.getEmptyBucket(), pos);
-            }
-            else
-                event.setCanceled(true);
-        }
-        else {
-            if(!level.getBlockState(pos).isAir() && !fluid1.isSame(fluid)) {
-                event.setCanceled(true);
-                return;
-            }
-            FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid);
-            if(fluidPool.addFluid(8)) {
-                event.setFilledBucket(new ItemStack(Items.BUCKET));
-                event.setResult(Event.Result.ALLOW);
-                ((BucketItem)(event.getEmptyBucket().getItem())).checkExtraContent(event.getEntity(), level, event.getEmptyBucket(), pos);
-            }
-            else
-                event.setCanceled(true);
-        }
-    }
-
+    public static final IntProperty FLUID_LEVEL = IntProperty.of("fluid_level",0,8);
     @Override
     public void onInitialize() {
-
+        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            if(player.isSpectator())
+                return ActionResult.PASS;
+            Item item = player.getStackInHand(hand).getItem();
+            if(item instanceof BlockItem)
+                return onPlaceBlock(world, Block.getBlockFromItem(item), hitResult);
+            else if(item instanceof BucketItem)
+                return onUseBucket(player, hand, world, hitResult);
+            return ActionResult.PASS;
+        });
+    }
+    private ActionResult onPlaceBlock(World world, Block block, BlockHitResult hitResult) {
+        if(block instanceof FluidFillable && !(block instanceof Waterloggable))
+            return ActionResult.PASS;
+        FluidState state = world.getFluidState(hitResult.getBlockPos());
+        Fluid fluid = state.getFluid();
+        if(fluid.matchesType(Fluids.EMPTY))
+            return ActionResult.PASS;
+        FluidPool fluidPool = new FluidPool(world, hitResult.getBlockPos(), fluid);
+        fluidPool.setBanned(hitResult.getBlockPos());
+        if(!fluidPool.addFluid(state.getLevel()))
+            return ActionResult.FAIL;
+        return ActionResult.PASS;
+    }
+    private ActionResult onUseBucket(PlayerEntity player, Hand hand, World world, BlockHitResult hitResult) {
+        ItemStack itemStack = player.getStackInHand(hand);
+        BucketItem bucket = (BucketItem)itemStack.getItem();
+        Fluid fluid;
+        try {
+            Field field = BucketItem.class.getDeclaredField("fluid");
+            field.setAccessible(true);
+            fluid = (Fluid)field.get(bucket);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        BlockPos pos = hitResult.getBlockPos();
+        Fluid fluid1 = world.getFluidState(pos).getFluid();
+        if(fluid == Fluids.EMPTY) {
+            if(fluid1 == Fluids.EMPTY) {
+                return ActionResult.FAIL;
+            }
+            FluidPool fluidPool = new FluidPool(world,pos,fluid1);
+            if(fluidPool.removeFluid(8)) {
+                ItemStack itemStack1 = new ItemStack(fluid1.getBucketItem());
+                if(itemStack.getCount() == 1) {
+                    player.setStackInHand(hand, itemStack1);
+                }
+                else {
+                    ItemStack itemStack2 = itemStack.copy();
+                    itemStack2.decrement(1);
+                    player.setStackInHand(hand,itemStack2);
+                    player.giveItemStack(itemStack1);
+                }
+                return ActionResult.SUCCESS;
+            }
+            else
+                return ActionResult.FAIL;
+        }
+        else {
+            if(!world.getBlockState(pos).isAir() && !fluid1.matchesType(fluid)) {
+                return ActionResult.FAIL;
+            }
+            FluidPool fluidPool = new FluidPool(world,pos,fluid);
+            if(fluidPool.addFluid(8)) {
+                bucket.onEmptied(player, world, itemStack, pos);
+                player.setStackInHand(hand, BucketItem.getEmptiedStack(itemStack, player));
+                return ActionResult.SUCCESS;
+            }
+            else
+                return ActionResult.FAIL;
+        }
     }
 }

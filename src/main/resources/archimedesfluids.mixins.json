@@ -3,10 +3,10 @@
 	"package": "com.moujounakki.archimedesfluids.mixins",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"MixinFlowingFluid",
-		"MixinBlockBehaviour",
-		"MixinStateDefinitionBuilder",
-		"MixinBlockStateBase"
+		"MixinFlowableFluid",
+		"MixinAbstractBlockState",
+		"MixinPistonBlock",
+		"MixinStateManagerBuilder"
 	],
 	"injectors": {
 		"defaultRequire": 1
