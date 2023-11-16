@@ -1,7 +1,7 @@
 Archimedes Fluids Syclusion Fork Readme
 
 Description
-Welcome to Archimedes Fluids-SUPERPERFORMANT, a performance-centric fork of the renowned Archimedes mod. This work-in-progress (WIP) mod is dedicated to enhancing fluid dynamics and interactions within the game, ensuring a smoother and more immersive experience for players.
+Welcome to Archimedes Fluids-SUPERPERFORMANT, a performance-centric fork of the Archimedes Fluids mod for 1.20.1. This work-in-progress (WIP) mod is dedicated to enhancing fluid dynamics and interactions within the game, ensuring a smoother and more immersive experience for players.
 
 Features
 Enhanced Fluid Dynamics: Reworked fluid physics for more realistic and responsive water and other liquid behaviors.
