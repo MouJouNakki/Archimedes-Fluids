@@ -1,46 +1,27 @@
+Archimedes Fluids Syclusion Fork Readme
 
-Source installation information for modders
--------------------------------------------
-This code follows the Minecraft Forge installation methodology. It will apply
-some small patches to the vanilla MCP source code, giving you and it access 
-to some of the data and functions you need to build a successful mod.
+Description
+Welcome to Archimedes Fluids-SUPERPERFORMANT, a performance-centric fork of the renowned Archimedes mod. This work-in-progress (WIP) mod is dedicated to enhancing fluid dynamics and interactions within the game, ensuring a smoother and more immersive experience for players.
 
-Note also that the patches are built against "un-renamed" MCP source code (aka
-SRG Names) - this means that you will not be able to read them directly against
-normal code.
+Features
+Enhanced Fluid Dynamics: Reworked fluid physics for more realistic and responsive water and other liquid behaviors.
+Optimized Performance: Special focus on optimizing resource usage to ensure minimal impact on game performance compared to original.
 
-Setup Process:
-==============================
+Compatibility and Integration: Designed to seamlessly replace the original Archimedes mod and other related mods.
 
-Step 1: Open your command-line and browse to the folder where you extracted the zip file.
+Installation
+Ensure you have the original Archimedes mod installed.
+Download the Archimedes Fluids mod file.
+Place the mod file in your game's mod folder.
+Launch the game and enjoy.
+Usage
+Once installed, Archimedes Fluids will automatically enhance the fluid dynamics in your game. No additional configuration is needed.
 
-Step 2: You're left with a choice.
-If you prefer to use Eclipse:
-1. Run the following command: `gradlew genEclipseRuns` (`./gradlew genEclipseRuns` if you are on Mac/Linux)
-2. Open Eclipse, Import > Existing Gradle Project > Select Folder 
-   or run `gradlew eclipse` to generate the project.
+Contributing
+As a WIP project, contributions and feedback are highly welcomed. Feel free to fork the project, submit pull requests, or open issues for bugs and feature requests.
 
-If you prefer to use IntelliJ:
-1. Open IDEA, and import project.
-2. Select your build.gradle file and have it import.
-3. Run the following command: `gradlew genIntellijRuns` (`./gradlew genIntellijRuns` if you are on Mac/Linux)
-4. Refresh the Gradle Project in IDEA if required.
+License
+Archimedes Fluids is licensed under the GNU Lesser General Public License, version 2.1 (LGPL 2.1). This license ensures the freedom to share and change the software and allows the use of the library in proprietary programs under certain conditions, while protecting the rights of the user to modify the library. For full license text, please refer to http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt.
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can 
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
-
-Mapping Names:
-=============================
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license, if you do not agree with it you can change your mapping names to other crowdsourced names in your 
-build.gradle. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
-
-Additional Resources: 
-=========================
-Community Documentation: https://mcforge.readthedocs.io/en/latest/gettingstarted/  
-LexManos' Install Video: https://www.youtube.com/watch?v=8VEdtQLuLO0  
-Forge Forum: https://forums.minecraftforge.net/  
-Forge Discord: https://discord.gg/UvedJ9m  
+Acknowledgements
+Special thanks to the creator of the original Archimedes Fluids mod, MouJouNakki.
