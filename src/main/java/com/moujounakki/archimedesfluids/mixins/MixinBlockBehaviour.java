@@ -1,11 +1,14 @@
 package com.moujounakki.archimedesfluids.mixins;
 
 import com.moujounakki.archimedesfluids.ArchimedesFluids;
+import com.moujounakki.archimedesfluids.FluidloggingData;
+import com.moujounakki.archimedesfluids.IMixinBlockStateBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -21,19 +24,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinBlockBehaviour {
     @Overwrite
     public FluidState getFluidState(BlockState state) {
-        if(!state.hasProperty(ArchimedesFluids.FLUID_LEVEL))
+        if(!state.hasProperty(BlockStateProperties.WATERLOGGED))
             return Fluids.EMPTY.defaultFluidState();
-        if(state.getValue(ArchimedesFluids.FLUID_LEVEL) <= 0)
-            return Fluids.EMPTY.defaultFluidState();
-        return ((FlowingFluid)(state.getValue(ArchimedesFluids.FLUIDLOGGED).fluid)).getFlowing(state.getValue(ArchimedesFluids.FLUID_LEVEL),false);
+        return ((IMixinBlockStateBase)state).getFluidloggingState();
     }
     @Inject(method = "updateShape", at = @At("HEAD"))
     private void onUpdateShape(BlockState state, Direction direction, BlockState state1, LevelAccessor levelAccessor, BlockPos pos, BlockPos pos1, CallbackInfoReturnable<BlockState> callbackInfoReturnable) {
-        if(!state.hasProperty(ArchimedesFluids.FLUID_LEVEL))
+        if(!state.hasProperty(BlockStateProperties.WATERLOGGED))
             return;
-        if(state.getValue(ArchimedesFluids.FLUID_LEVEL) <= 0)
+        FluidState fluidstate = FluidloggingData.getFluid(levelAccessor, pos);
+        if(fluidstate.getAmount() <= 0)
             return;
-        Fluid fluid = state.getValue(ArchimedesFluids.FLUIDLOGGED).fluid;
+        Fluid fluid = fluidstate.getType();
         levelAccessor.scheduleTick(pos, fluid, fluid.getTickDelay(levelAccessor));
     }
 }

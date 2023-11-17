@@ -2,6 +2,8 @@ package com.moujounakki.archimedesfluids;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -19,6 +21,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.level.PistonEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -26,6 +29,8 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
 import org.slf4j.Logger;
 
 import java.util.HashSet;
@@ -41,8 +46,13 @@ public class ArchimedesFluids
     public static final String MODID = "archimedesfluids";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
-    public static final FluidloggingProperty FLUIDLOGGED = new FluidloggingProperty();
-    public static final IntegerProperty FLUID_LEVEL = IntegerProperty.create("fluid_level",0,8);
+    private static final String PROTOCOL_VERSION = "1";
+    public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation(MODID, "main"),
+            () -> PROTOCOL_VERSION,
+            PROTOCOL_VERSION::equals,
+            PROTOCOL_VERSION::equals
+    );
 
     public ArchimedesFluids()
     {
@@ -143,5 +153,11 @@ public class ArchimedesFluids
             else
                 event.setCanceled(true);
         }
+    }
+    @SubscribeEvent
+    public void onLevelLoad(LevelEvent.Load event) {
+        if(!(event.getLevel() instanceof ServerLevel))
+            return;
+        FluidloggingData.noteLevelLoad(event.getLevel());
     }
 }

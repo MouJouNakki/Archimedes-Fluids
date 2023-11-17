@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 
@@ -131,6 +132,6 @@ public class FluidPool {
 
     private boolean canBeFluidlogged(BlockPos pos) {
         BlockState blockState = level.getBlockState(pos);
-        return blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL) && blockState.getValue(ArchimedesFluids.FLUID_LEVEL) <= 0;
+        return blockState.hasProperty(BlockStateProperties.WATERLOGGED) && FluidloggingData.getFluid(level, pos).getAmount() <= 0;
     }
 }

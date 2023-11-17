@@ -103,17 +103,12 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
     }
     private void setFlowing(LevelAccessor level, BlockPos pos, int amount) {
         BlockState blockState = level.getBlockState(pos);
-        if(blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL)) {
-            Fluidlogging fluidlogging = FluidloggingProperty.getFluidLogging(getFlowing(1,false).getType());
-            if(fluidlogging != null) {
-                level.setBlock(pos, blockState
-//                    .setValue(ArchimedesFluids.FLUIDLOGGED, new Fluidlogging(this))
-                        .setValue(ArchimedesFluids.FLUIDLOGGED, fluidlogging)
-                        .setValue(ArchimedesFluids.FLUID_LEVEL, amount)
-                        .setValue(BlockStateProperties.WATERLOGGED, false), 3);
-                level.scheduleTick(pos, this, this.getTickDelay(level));
-                return;
-            }
+        if(blockState.hasProperty(BlockStateProperties.WATERLOGGED)) {
+            if(blockState.getValue(BlockStateProperties.WATERLOGGED))
+                level.setBlock(pos, blockState.setValue(BlockStateProperties.WATERLOGGED, false), 3);
+            FluidloggingData.setFluid(level, pos, this.getFlowing(amount, this.isFallingAt(level, pos)));
+            level.scheduleTick(pos, this, this.getTickDelay(level));
+            return;
         }
         if(amount < 1) {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
@@ -147,7 +142,7 @@ public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFl
         else if(fluidstate.getType().isSame(this)) {
             return FluidSpreadType.ADD;
         }
-        else if(fluidstate.isEmpty() && blockstate.hasProperty(ArchimedesFluids.FLUID_LEVEL)) {
+        else if(fluidstate.isEmpty() && blockstate.hasProperty(BlockStateProperties.WATERLOGGED)) {
             return FluidSpreadType.ADD;
         }
         return FluidSpreadType.BLOCKED;
