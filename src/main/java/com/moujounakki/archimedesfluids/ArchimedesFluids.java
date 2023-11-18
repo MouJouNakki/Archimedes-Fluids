@@ -1,6 +1,8 @@
 package com.moujounakki.archimedesfluids;
 
 import com.mojang.logging.LogUtils;
+import com.moujounakki.archimedesfluids.networking.ArchimedesFluidsPacketHandler;
+import com.moujounakki.archimedesfluids.networking.RequestFluidloggingPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -21,6 +23,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.level.PistonEvent;
 import net.minecraftforge.eventbus.api.Event;
@@ -46,13 +49,6 @@ public class ArchimedesFluids
     public static final String MODID = "archimedesfluids";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String PROTOCOL_VERSION = "1";
-    public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(MODID, "main"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
-    );
 
     public ArchimedesFluids()
     {
@@ -60,6 +56,8 @@ public class ArchimedesFluids
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+
+        ArchimedesFluidsPacketHandler.register(RequestFluidloggingPacket.class);
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
@@ -159,5 +157,11 @@ public class ArchimedesFluids
         if(!(event.getLevel() instanceof ServerLevel))
             return;
         FluidloggingData.noteLevelLoad(event.getLevel());
+    }
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if(!(event.getLevel() instanceof ClientLevel))
+            return;
+
     }
 }
