@@ -3,6 +3,7 @@ package com.moujounakki.archimedesfluids;
 import com.mojang.logging.LogUtils;
 import com.moujounakki.archimedesfluids.networking.ArchimedesFluidsPacketHandler;
 import com.moujounakki.archimedesfluids.networking.RequestFluidloggingPacket;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -160,8 +161,8 @@ public class ArchimedesFluids
     }
     @SubscribeEvent
     public void onChunkLoad(ChunkEvent.Load event) {
-        if(!(event.getLevel() instanceof ClientLevel))
+        if(!event.getLevel().isClientSide())
             return;
-
+        ArchimedesFluidsPacketHandler.INSTANCE.sendToServer(new RequestFluidloggingPacket(event.getChunk().getPos()));
     }
 }

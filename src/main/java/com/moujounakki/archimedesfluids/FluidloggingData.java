@@ -1,25 +1,33 @@
 package com.moujounakki.archimedesfluids;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.FALLING;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.LEVEL;
 
 public class FluidloggingData extends SavedData {
     private final HashMap<Fluid, HashMap<Integer, HashSet<BlockPos>>> storageMap = new HashMap<>();
+    private static final HashMap<LevelAccessor, HashMap<ChunkPos, HashSet<BlockPos>>> chunkMap = new HashMap<>();
     private LevelAccessor levelAccessor;
     private static LevelAccessor lastAccessor;
     private static final HashMap<LevelAccessor, HashMap<BlockPos, FluidState>> stateMap = new HashMap<>();
@@ -34,27 +42,36 @@ public class FluidloggingData extends SavedData {
     }
     public static void setFluid(LevelAccessor level, BlockPos pos, FluidState fluidstate) {
         ((IMixinBlockStateBase)level.getBlockState(pos)).setFluidloggingState(fluidstate);
+        ChunkPos chunkPos = new ChunkPos(pos);
+        boolean isEmptying = (fluidstate.isEmpty() || fluidstate.getAmount() < 1);
         if(level instanceof ServerLevel) {
             lastAccessor = level;
-            FluidloggingData data;
-            if(!dataMap.containsKey(level)) {
-                data = ((ServerLevel) level).getDataStorage().computeIfAbsent(FluidloggingData::load, FluidloggingData::create, "fluidlogging");
-                dataMap.put(level, data);
-            }
-            else
-                data = dataMap.get(level);
-            if(!data.storageMap.containsKey(fluidstate.getType()))
-                data.storageMap.put(fluidstate.getType(), new HashMap<>());
-            HashMap<Integer, HashSet<BlockPos>> amountMap = data.storageMap.get(fluidstate.getType());
-            if(!amountMap.containsKey(fluidstate.getAmount()))
-                amountMap.put(fluidstate.getAmount(), new HashSet<>());
-            HashSet<BlockPos> posSet = amountMap.get(fluidstate.getAmount());
-            posSet.add(pos);
-            data.setDirty();
+            getFromMap(dataMap, level, isEmptying, () -> (((ServerLevel) level).getDataStorage().computeIfAbsent(FluidloggingData::load, FluidloggingData::create, "fluidlogging")), (FluidloggingData data) -> getFromMap(data.storageMap, fluidstate.getType(), isEmptying, HashMap::new, (HashMap<Integer, HashSet<BlockPos>> amountMap) -> {
+                HashSet<BlockPos> posSet = getFromMap(amountMap, fluidstate.getAmount(), isEmptying, HashSet::new);
+                if(posSet == null)
+                    return;
+                posSet.add(pos);
+                data.setDirty();
+            }));
         }
-        if(!stateMap.containsKey(level))
-            stateMap.put(level, new HashMap<>());
-        stateMap.get(level).put(pos,fluidstate);
+        getFromMap(stateMap, level, isEmptying, HashMap::new, (HashMap<BlockPos, FluidState> posMap) -> posMap.put(pos, fluidstate));
+    }
+
+    private static <K, V> void getFromMap(HashMap<K, V> map, K key, boolean isEmptying, Supplier<V> ifMissing, Consumer<V> ifPresent) {
+        V v = getFromMap(map, key, isEmptying, ifMissing);
+        if(v == null)
+            return;
+        ifPresent.accept(v);
+    }
+    @Nullable
+    private static <K, V> V getFromMap(HashMap<K, V> map, K key, boolean isEmptying, Supplier<V> ifMissing) {
+        if(map.containsKey(key))
+            return map.get(key);
+        if(isEmptying)
+            return null;
+        V v = ifMissing.get();
+        map.put(key, v);
+        return v;
     }
     @Override
     public CompoundTag save(CompoundTag tag) {
