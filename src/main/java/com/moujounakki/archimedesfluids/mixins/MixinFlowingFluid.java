@@ -198,7 +198,8 @@ private void setFlowing(LevelAccessor level, BlockPos pos, int amount, int sourc
         );
 
         int yLevel = pos.getY();
-        if (yLevel == sourceYLevel && desiredBiomes.stream().anyMatch(biomeHolder::is) && yLevel >= 60 && yLevel <= 62) {
+        int seaLevel = level.getSeaLevel();
+        if (yLevel == sourceYLevel && desiredBiomes.stream().anyMatch(biomeHolder::is) && yLevel >= seaLevel - 2 && yLevel <= seaLevel) {
             amount = 8;
         }
     }
