@@ -1,7 +1,5 @@
 package com.moujounakki.archimedesfluids;
 
-import com.moujounakki.archimedesfluids.ArchimedesFluidsConfig;
-
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.BucketItem;
@@ -31,7 +29,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,7 +45,7 @@ public class ArchimedesFluids {
 
     public ArchimedesFluids() {
         // Initialize the configuration
-        ArchimedesFluidsConfig config = ArchimedesFluidsConfig.getInstance();
+        ArchimedesFluidsCommonConfig.initialize();
 
         // Get the mod event bus
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();

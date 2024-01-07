@@ -2,30 +2,21 @@ package com.moujounakki.archimedesfluids.mixins;
 
 import com.moujounakki.archimedesfluids.*;
 import java.util.List;
-import java.util.Collections;
 import java.util.Queue;
 import java.util.ArrayDeque;
-import java.util.LinkedList;
 import java.util.Arrays;
-import net.minecraft.core.Registry;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.core.Registry;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -34,10 +25,7 @@ import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.phys.Vec3;
-import java.util.ArrayList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -105,9 +93,8 @@ public void tick(Level level, BlockPos pos, FluidState state) {
     }
 
     // Get the configuration
-    ArchimedesFluidsConfig config = ArchimedesFluidsConfig.getInstance();
-    int maxUpdatesPerTick = config.getMaxUpdatesPerTick();
-    int queueCleanInterval = config.getQueueCleanInterval();
+    int maxUpdatesPerTick = ArchimedesFluidsCommonConfig.getMaxUpdatesPerTick();
+    int queueCleanInterval = ArchimedesFluidsCommonConfig.getUpdateQueueCleanInterval();
 
     // Reset the updates processed counter for each tick
     int updatesProcessed = 0;
@@ -120,7 +107,7 @@ public void tick(Level level, BlockPos pos, FluidState state) {
     }
 
     // Enqueue the current position for future processing only if the queue size is below the configured limit
-    if (updateQueue.size() < config.getMaxQueueSize()) {
+    if (updateQueue.size() < ArchimedesFluidsCommonConfig.getMaxUpdateQueueSize()) {
         updateQueue.offer(pos);
     } else {
         // Optionally, you can log a message or take some action when the queue is full
@@ -134,7 +121,7 @@ public void tick(Level level, BlockPos pos, FluidState state) {
 }
 
 private void cleanQueue() {
-    final int MAX_QUEUE_SIZE = ArchimedesFluidsConfig.getInstance().getMaxQueueSize(); // Get the max queue size from the config
+    final int MAX_QUEUE_SIZE = ArchimedesFluidsCommonConfig.getMaxUpdateQueueSize(); // Get the max queue size from the config
 
     // Limit the size of the queue
     while (updateQueue.size() > MAX_QUEUE_SIZE) {
