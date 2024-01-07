@@ -16,6 +16,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
 import net.minecraftforge.event.level.BlockEvent;
@@ -28,24 +29,25 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(ArchimedesFluids.MODID)
 @SuppressWarnings("unused")
-public class ArchimedesFluids
-{
+public class ArchimedesFluids {
     // Define mod id in a common place for everything to reference
     public static final String MODID = "archimedesfluids";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
     public static final FluidloggingProperty FLUIDLOGGED = new FluidloggingProperty();
-    public static final IntegerProperty FLUID_LEVEL = IntegerProperty.create("fluid_level",0,8);
+    public static final IntegerProperty FLUID_LEVEL = IntegerProperty.create("fluid_level", 0, 8);
 
-    public ArchimedesFluids()
-    {
+    public ArchimedesFluids() {
+        // Initialize the configuration
+        ArchimedesFluidsCommonConfig.initialize();
+
+        // Get the mod event bus
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // Register ourselves for server and other game events we are interested in
@@ -113,7 +115,8 @@ public class ArchimedesFluids
         HitResult target = event.getTarget();
         if(target == null)
             return;
-        BlockPos pos = new BlockPos(target.getLocation());
+        Vec3 location = target.getLocation();
+        BlockPos pos = new BlockPos((int) Math.floor(location.x()), (int) Math.floor(location.y()), (int) Math.floor(location.z()));
         Fluid fluid1 = level.getFluidState(pos).getType();
         if(fluid == Fluids.EMPTY) {
             if(fluid1 == Fluids.EMPTY) {

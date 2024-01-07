@@ -1,8 +1,18 @@
 package com.moujounakki.archimedesfluids.mixins;
 
 import com.moujounakki.archimedesfluids.*;
+import java.util.List;
+import java.util.Queue;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -10,78 +20,119 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import java.util.List;
 
 
 @Mixin(FlowingFluid.class)
 @SuppressWarnings("unused")
 public abstract class MixinFlowingFluid extends Fluid implements IMixinFlowingFluid {
-    public void tick(Level level, BlockPos pos, FluidState state) {
-        BlockState blockstate = level.getBlockState(pos.below());
-        FluidState fluidstate = blockstate.getFluidState();
-        FluidSpreadType spreadType = this.getFluidSpreadType(blockstate);
-        int amount = this.getAmount(state);
-        
-        if (spreadType == FluidSpreadType.REPLACE) {
-            if (!blockstate.isAir()) {
-                this.beforeDestroyingBlock(level, pos.below(), blockstate);
-            }
-            this.transferFluid(level, pos, pos.below(), amount);
-        } else if (spreadType == FluidSpreadType.ADD && fluidstate.getAmount() < 8) {
-            int otherAmount = fluidstate.getAmount();
-            int transfer = Math.min(amount, 8 - otherAmount);
-            this.transferFluid(level, pos, pos.below(), transfer);
-        } else if (amount > 1) {
-            List<Direction> directionList = Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom());
-Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
-            for (Direction direction : shuffledDirections) {
-                BlockPos pos1 = pos.relative(direction);
-                BlockState blockstate1 = level.getBlockState(pos1);
-                FluidState fluidstate1 = blockstate1.getFluidState();
-                FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
-                
-                if (spreadType1 == FluidSpreadType.REPLACE) {
-                    if (!blockstate1.isAir()) {
-                        this.beforeDestroyingBlock(level, pos1, blockstate1);
-                    }
-                    this.transferFluid(level, pos, pos1);
-                    break;
-                } else if (spreadType1 == FluidSpreadType.ADD) {
-                    int otherAmount = fluidstate1.getAmount();
-                    if (amount > otherAmount) {
-                        this.transferFluid(level, pos, pos1);
-                        break;
-                    }
+    private final Queue<BlockPos> updateQueue = new ArrayDeque<>();
+
+public void tick(Level level, BlockPos pos, FluidState state) {
+    BlockState blockstate = level.getBlockState(pos.below());
+    FluidState fluidstate = blockstate.getFluidState();
+    FluidSpreadType spreadType = this.getFluidSpreadType(blockstate);
+    int amount = this.getAmount(state);
+
+    if (spreadType == FluidSpreadType.REPLACE) {
+        if (!blockstate.isAir()) {
+            this.beforeDestroyingBlock(level, pos.below(), blockstate);
+        }
+        this.transferFluid(level, pos, pos.below(), amount);
+    } else if (spreadType == FluidSpreadType.ADD && fluidstate.getAmount() < 8) {
+        int otherAmount = fluidstate.getAmount();
+        int transfer = Math.min(amount, 8 - otherAmount);
+        this.transferFluid(level, pos, pos.below(), transfer);
+    } else if (amount > 1) {
+        List<Direction> directionList = Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom());
+        Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
+        for (Direction direction : shuffledDirections) {
+            BlockPos pos1 = pos.relative(direction);
+            BlockState blockstate1 = level.getBlockState(pos1);
+            FluidState fluidstate1 = blockstate1.getFluidState();
+            FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
+
+            if (spreadType1 == FluidSpreadType.REPLACE) {
+                if (!blockstate1.isAir()) {
+                    this.beforeDestroyingBlock(level, pos1, blockstate1);
                 }
-            }
-        } else if (amount == 1 && level.random.nextFloat() < 0.3) {
-List<Direction> directionList = Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom());
-Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
-            for (Direction direction : shuffledDirections) {
-                BlockPos pos1 = pos.relative(direction);
-                BlockState blockstate1 = level.getBlockState(pos1);
-                FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
-                
-                if (spreadType1 == FluidSpreadType.REPLACE) {
-                    if (!blockstate1.isAir()) {
-                        this.beforeDestroyingBlock(level, pos1, blockstate1);
-                    }
+                this.transferFluid(level, pos, pos1);
+                break;
+            } else if (spreadType1 == FluidSpreadType.ADD) {
+                int otherAmount = fluidstate1.getAmount();
+                if (amount > otherAmount) {
                     this.transferFluid(level, pos, pos1);
                     break;
                 }
             }
         }
+    } else if (amount == 1 && level.random.nextFloat() < 0.3) {
+        List<Direction> directionList = Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom());
+        Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
+        for (Direction direction : shuffledDirections) {
+            BlockPos pos1 = pos.relative(direction);
+            BlockState blockstate1 = level.getBlockState(pos1);
+            FluidSpreadType spreadType1 = this.getFluidSpreadType(blockstate1);
+
+            if (spreadType1 == FluidSpreadType.REPLACE) {
+                if (!blockstate1.isAir()) {
+                    this.beforeDestroyingBlock(level, pos1, blockstate1);
+                }
+                this.transferFluid(level, pos, pos1);
+                break;
+            }
+        }
     }
-    
+
+    // Get the configuration
+    int maxUpdatesPerTick = ArchimedesFluidsCommonConfig.getMaxUpdatesPerTick();
+    int queueCleanInterval = ArchimedesFluidsCommonConfig.getUpdateQueueCleanInterval();
+
+    // Reset the updates processed counter for each tick
+    int updatesProcessed = 0;
+
+    // Process updates from the queue, up to the specified limit.
+    while (updatesProcessed < maxUpdatesPerTick && !updateQueue.isEmpty()) {
+        BlockPos updatePos = updateQueue.poll();
+        // Implement your custom logic here for processing updates from the queue
+        updatesProcessed++;
+    }
+
+    // Enqueue the current position for future processing only if the queue size is below the configured limit
+    if (updateQueue.size() < ArchimedesFluidsCommonConfig.getMaxUpdateQueueSize()) {
+        updateQueue.offer(pos);
+    } else {
+        // Optionally, you can log a message or take some action when the queue is full
+        // For example, you can skip adding to the queue or remove old entries
+    }
+
+    // Optionally clean the queue at regular intervals
+    if (queueCleanInterval > 0 && level.getGameTime() % queueCleanInterval == 0) {
+        cleanQueue();  // Implement this method based on your queue cleaning logic
+    }
+}
+
+private void cleanQueue() {
+    final int MAX_QUEUE_SIZE = ArchimedesFluidsCommonConfig.getMaxUpdateQueueSize(); // Get the max queue size from the config
+
+    // Limit the size of the queue
+    while (updateQueue.size() > MAX_QUEUE_SIZE) {
+        updateQueue.poll(); // Remove the oldest elements to maintain the size limit
+    }
+
+    // Additional cleaning logic can be added here if needed
+    // For example, you might want to remove positions that are no longer relevant for updates
+    // This might depend on the specific logic of your fluid dynamics and the state of the world
+}
+
     private boolean isFallingAt(LevelReader reader, BlockPos pos) {
         BlockState blockstate = reader.getBlockState(pos);
         BlockPos blockpos1 = pos.above();
@@ -112,34 +163,54 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
     }
     
     private void transferFluid(LevelAccessor level, BlockPos from, BlockPos to, int fromAmount, int toAmount, int transfer) {
-        this.setFlowing(level, to, toAmount + transfer);
-        this.setFlowing(level, from, fromAmount - transfer);
+        this.setFlowing(level, to, toAmount + transfer, to.getY());
+        this.setFlowing(level, from, fromAmount - transfer, from.getY());
     }
-    
-    private void setFlowing(LevelAccessor level, BlockPos pos, int amount) {
-        BlockState blockState = level.getBlockState(pos);
-        
-        if (blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL)) {
-            Fluidlogging fluidlogging = FluidloggingProperty.getFluidLogging(getFlowing(1, false).getType());
-            
-            if (fluidlogging != null) {
-                level.setBlock(pos, blockState
-                        .setValue(ArchimedesFluids.FLUIDLOGGED, fluidlogging)
-                        .setValue(ArchimedesFluids.FLUID_LEVEL, amount)
-                        .setValue(BlockStateProperties.WATERLOGGED, false), 3);
-                level.scheduleTick(pos, this, this.getTickDelay(level));
-                return;
-            }
+
+private void setFlowing(LevelAccessor level, BlockPos pos, int amount, int sourceYLevel) {
+    FluidState fluidState = level.getFluidState(pos);
+    if (fluidState.getType() == Fluids.WATER) {
+        Holder<Biome> biomeHolder = level.getBiome(pos);
+        List<ResourceKey<Biome>> desiredBiomes = Arrays.asList(
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "deep_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "warm_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "deep_warm_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "lukewarm_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "deep_lukewarm_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "cold_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "deep_cold_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "frozen_ocean")),
+            ResourceKey.create(Registries.BIOME, new ResourceLocation("minecraft", "deep_frozen_ocean"))
+        );
+
+        int yLevel = pos.getY();
+        int seaLevel = level.getSeaLevel();
+        if (yLevel == sourceYLevel && desiredBiomes.stream().anyMatch(biomeHolder::is) && yLevel >= seaLevel - 2 && yLevel <= seaLevel) {
+            amount = 8;
         }
-        
-        if (amount < 1) {
-            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+    }
+
+    BlockState blockState = level.getBlockState(pos);
+    if (blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL)) {
+        Fluidlogging fluidlogging = FluidloggingProperty.getFluidLogging(fluidState.getType());
+        if (fluidlogging != null) {
+            level.setBlock(pos, blockState
+                .setValue(ArchimedesFluids.FLUIDLOGGED, fluidlogging)
+                .setValue(ArchimedesFluids.FLUID_LEVEL, amount)
+                .setValue(BlockStateProperties.WATERLOGGED, false), 3);
+            level.scheduleTick(pos, this, this.getTickDelay(level));
             return;
         }
-        
+    }
+
+    if (amount < 1) {
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+    } else {
         level.setBlock(pos, this.getFlowing(amount, this.isFallingAt(level, pos)).createLegacyBlock(), 3);
     }
-    
+}
+ 
     @Override
     public void changeFluid(Level level, BlockPos pos, int amount) {
         int current = level.getFluidState(pos).getAmount();
@@ -148,7 +219,7 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
             throw new IllegalArgumentException(String.format("Cannot add over 8 fluid (current %d, trying to add: %d)", current, amount));
         }
         
-        this.setFlowing(level, pos, current + amount);
+        this.setFlowing(level, pos, current + amount, pos.getY());
     }
     
     @Shadow
@@ -223,7 +294,7 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
                 float f1 = 0.0F;
                 
                 if (f == 0.0F) {
-                    if (!blockGetter.getBlockState(blockpos$mutableblockpos).getMaterial().blocksMotion()) {
+                    if (!blockGetter.getBlockState(blockpos$mutableblockpos).blocksMotion()) {
                         BlockPos blockpos = blockpos$mutableblockpos.below();
                         FluidState fluidstate1 = blockGetter.getFluidState(blockpos);
                         
@@ -276,4 +347,3 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
     @Shadow
     public static final BooleanProperty FALLING = BlockStateProperties.FALLING;
 }
-

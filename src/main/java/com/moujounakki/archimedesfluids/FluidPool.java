@@ -34,22 +34,28 @@ public class FluidPool {
         int foundFluid = 0;
 
         while (foundFluid < amount) {
-            BlockPos pos = explore(false);
-            if (pos == null) {
+            Set<BlockPos> batch = exploreBatch(false, 10);
+            if (batch.isEmpty()) {
                 return false;
             }
 
-            if (banned.contains(pos)) {
-                continue;
-            }
+            for (BlockPos pos : batch) {
+                if (pos == null) {
+                    return false;
+                }
 
-            FluidState fluidstate = level.getFluidState(pos);
-            if (!fluidstate.getType().isSame(fluid)) {
-                continue;
-            }
+                if (banned.contains(pos)) {
+                    continue;
+                }
 
-            set.add(pos);
-            foundFluid += fluidstate.getAmount();
+                FluidState fluidstate = level.getFluidState(pos);
+                if (!fluidstate.getType().isSame(fluid)) {
+                    continue;
+                }
+
+                set.add(pos);
+                foundFluid += fluidstate.getAmount();
+            }
         }
 
         for (BlockPos pos : set) {
@@ -67,28 +73,34 @@ public class FluidPool {
         int foundSpace = 0;
 
         while (foundSpace < amount) {
-            BlockPos pos = explore(true);
-            if (pos == null) {
+            Set<BlockPos> batch = exploreBatch(true, 10);
+            if (batch.isEmpty()) {
                 return false;
             }
 
-            if (banned.contains(pos)) {
-                continue;
-            }
+            for (BlockPos pos : batch) {
+                if (pos == null) {
+                    return false;
+                }
 
-            if (level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
+                if (banned.contains(pos)) {
+                    continue;
+                }
+
+                if (level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
+                    set.add(pos);
+                    foundSpace += 8;
+                    continue;
+                }
+
+                FluidState fluidstate = level.getFluidState(pos);
+                if (!fluidstate.getType().isSame(fluid)) {
+                    continue;
+                }
+
                 set.add(pos);
-                foundSpace += 8;
-                continue;
+                foundSpace += 8 - fluidstate.getAmount();
             }
-
-            FluidState fluidstate = level.getFluidState(pos);
-            if (!fluidstate.getType().isSame(fluid)) {
-                continue;
-            }
-
-            set.add(pos);
-            foundSpace += 8 - fluidstate.getAmount();
         }
 
         for (BlockPos pos : set) {
@@ -105,21 +117,27 @@ public class FluidPool {
         int foundFluid = 0;
 
         while (foundFluid < amount) {
-            BlockPos pos = explore(false);
-            if (pos == null) {
+            Set<BlockPos> batch = exploreBatch(false, 10);
+            if (batch.isEmpty()) {
                 return false;
             }
 
-            if (banned.contains(pos)) {
-                continue;
-            }
+            for (BlockPos pos : batch) {
+                if (pos == null) {
+                    return false;
+                }
 
-            FluidState fluidstate = level.getFluidState(pos);
-            if (!fluidstate.getType().isSame(fluid)) {
-                continue;
-            }
+                if (banned.contains(pos)) {
+                    continue;
+                }
 
-            foundFluid += fluidstate.getAmount();
+                FluidState fluidstate = level.getFluidState(pos);
+                if (!fluidstate.getType().isSame(fluid)) {
+                    continue;
+                }
+
+                foundFluid += fluidstate.getAmount();
+            }
         }
 
         return true;
@@ -129,40 +147,49 @@ public class FluidPool {
         int foundSpace = 0;
 
         while (foundSpace < amount) {
-            BlockPos pos = explore(true);
-            if (pos == null) {
+            Set<BlockPos> batch = exploreBatch(true, 10);
+            if (batch.isEmpty()) {
                 return false;
             }
 
-            if (banned.contains(pos)) {
-                continue;
-            }
+            for (BlockPos pos : batch) {
+                if (pos == null) {
+                    return false;
+                }
 
-            if (level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
-                foundSpace += 8;
-                continue;
-            }
+                if (banned.contains(pos)) {
+                    continue;
+                }
 
-            FluidState fluidstate = level.getFluidState(pos);
-            if (!fluidstate.getType().isSame(fluid)) {
-                continue;
-            }
+                if (level.getBlockState(pos).isAir() || canBeFluidlogged(pos)) {
+                    foundSpace += 8;
+                    continue;
+                }
 
-            foundSpace += 8 - fluidstate.getAmount();
+                FluidState fluidstate = level.getFluidState(pos);
+                if (!fluidstate.getType().isSame(fluid)) {
+                    continue;
+                }
+
+                foundSpace += 8 - fluidstate.getAmount();
+            }
         }
 
         return true;
     }
 
-    private BlockPos explore(boolean lookForAir) {
+    private Set<BlockPos> exploreBatch(boolean lookForAir, int batchSize) {
+        Set<BlockPos> exploredBatch = new HashSet<>();
         BlockPos pos;
-        while ((pos = unexplored.poll()) != null) {
+        int count = 3;
+        while (count < batchSize && (pos = unexplored.poll()) != null) {
             explored.add(pos);
+            exploredBatch.add(pos);
 
             for (Direction direction : Direction.values()) {
                 BlockPos pos1 = pos.relative(direction);
 
-                if (explored.contains(pos1)) {
+                if (explored.contains(pos1) || unexplored.contains(pos1)) {
                     continue;
                 }
 
@@ -174,11 +201,10 @@ public class FluidPool {
 
                 unexplored.add(pos1);
             }
-
-            return pos;
+            count++;
         }
 
-        return null;
+        return exploredBatch;
     }
 
     private boolean canBeFluidlogged(BlockPos pos) {
@@ -186,3 +212,4 @@ public class FluidPool {
         return blockState.hasProperty(ArchimedesFluids.FLUID_LEVEL) && blockState.getValue(ArchimedesFluids.FLUID_LEVEL) <= 0;
     }
 }
+
