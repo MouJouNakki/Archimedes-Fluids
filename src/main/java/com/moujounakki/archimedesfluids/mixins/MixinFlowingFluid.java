@@ -136,8 +136,11 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
             return;
         }
-        
-        level.setBlock(pos, this.getFlowing(amount, this.isFallingAt(level, pos)).createLegacyBlock(), 3);
+
+        if (amount == 8)
+            level.setBlock(pos, this.getSource(this.isFallingAt(level, pos)).createLegacyBlock(), 3);
+        else
+            level.setBlock(pos, this.getFlowing(amount, this.isFallingAt(level, pos)).createLegacyBlock(), 3);
     }
     
     @Override
@@ -153,6 +156,8 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
     
     @Shadow
     public abstract FluidState getFlowing(int p_75954_, boolean p_75955_);
+    @Shadow
+    public abstract FluidState getSource(boolean p_76069_);
     
        @Shadow
     protected abstract void beforeDestroyingBlock(LevelAccessor p_76002_, BlockPos p_76003_, BlockState p_76004_);
