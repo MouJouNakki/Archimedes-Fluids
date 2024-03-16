@@ -46,7 +46,9 @@ public class FluidloggingData extends SavedData {
         boolean isEmptying = (fluidstate.isEmpty() || fluidstate.getAmount() < 1);
         if(level instanceof ServerLevel) {
             lastAccessor = level;
-            getFromMap(dataMap, level, isEmptying, () -> (((ServerLevel) level).getDataStorage().computeIfAbsent(FluidloggingData::load, FluidloggingData::create, "fluidlogging")), (FluidloggingData data) -> getFromMap(data.storageMap, fluidstate.getType(), isEmptying, HashMap::new, (HashMap<Integer, HashSet<BlockPos>> amountMap) -> {
+            getFromMap(dataMap, level, isEmptying, () -> (((ServerLevel) level).getDataStorage().computeIfAbsent(FluidloggingData::load, FluidloggingData::create, "fluidlogging")),
+                    (FluidloggingData data) -> getFromMap(data.storageMap, fluidstate.getType(), isEmptying, HashMap::new,
+                            (HashMap<Integer, HashSet<BlockPos>> amountMap) -> {
                 HashSet<BlockPos> posSet = getFromMap(amountMap, fluidstate.getAmount(), isEmptying, HashSet::new);
                 if(posSet == null)
                     return;

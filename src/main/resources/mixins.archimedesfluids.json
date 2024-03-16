@@ -4,7 +4,6 @@
   "mixins": [
     "MixinFlowingFluid",
     "MixinBlockBehaviour",
-    "MixinStateDefinitionBuilder",
     "MixinBlockStateBase"
   ]
 }

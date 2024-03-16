@@ -8,11 +8,12 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class ReturnFluidloggingPacket extends ArchimedesFluidsServerClientPacket {
-    public final LevelAccessor level;
-
-    public ReturnFluidloggingPacket(LevelAccessor level) {
-        this.level = level;
-    }
+//    public final LevelAccessor level;
+//
+//    public ReturnFluidloggingPacket(LevelAccessor level) {
+//        this.level = level;
+//    }
+    public ReturnFluidloggingPacket() {}
 
     @Override
     public void encode(FriendlyByteBuf buf) {

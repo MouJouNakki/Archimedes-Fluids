@@ -26,7 +26,10 @@ public abstract class MixinBlockBehaviour {
     public FluidState getFluidState(BlockState state) {
         if(!state.hasProperty(BlockStateProperties.WATERLOGGED))
             return Fluids.EMPTY.defaultFluidState();
-        return ((IMixinBlockStateBase)state).getFluidloggingState();
+        FluidState fluidstate = ((IMixinBlockStateBase)state).getFluidloggingState();
+        if (fluidstate == null)
+            return Fluids.EMPTY.defaultFluidState();
+        return fluidstate;
     }
     @Inject(method = "updateShape", at = @At("HEAD"))
     private void onUpdateShape(BlockState state, Direction direction, BlockState state1, LevelAccessor levelAccessor, BlockPos pos, BlockPos pos1, CallbackInfoReturnable<BlockState> callbackInfoReturnable) {
