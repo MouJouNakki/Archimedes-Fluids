@@ -29,14 +29,17 @@ public class FluidPool {
         banned.add(pos);
     }
 
-    public boolean removeFluid(int amount) {
+    public int removeFluid(int amount, boolean attempt) {
         Set<BlockPos> set = new HashSet<>();
         int foundFluid = 0;
 
         while (foundFluid < amount) {
             BlockPos pos = explore(false);
             if (pos == null) {
-                return false;
+                if (attempt)
+                    break;
+                else
+                    return -1;
             }
 
             if (banned.contains(pos)) {
@@ -51,25 +54,31 @@ public class FluidPool {
             set.add(pos);
             foundFluid += fluidstate.getAmount();
         }
-
+        int totalTransfer = 0;
         for (BlockPos pos : set) {
             FluidState fluidstate = level.getFluidState(pos);
             int transfer = Math.min(fluidstate.getAmount(), amount);
             amount -= transfer;
+            totalTransfer += transfer;
             ((IMixinFlowingFluid) fluid).changeFluid(level, pos, -transfer);
         }
 
-        return true;
+        return totalTransfer;
     }
-
-    public boolean addFluid(int amount) {
+    public boolean removeFluid(int amount) {
+        return removeFluid(amount, false) != -1;
+    }
+    public int addFluid(int amount, boolean attempt) {
         Set<BlockPos> set = new HashSet<>();
         int foundSpace = 0;
 
         while (foundSpace < amount) {
             BlockPos pos = explore(true);
             if (pos == null) {
-                return false;
+                if (attempt)
+                    break;
+                else
+                    return -1;
             }
 
             if (banned.contains(pos)) {
@@ -90,15 +99,19 @@ public class FluidPool {
             set.add(pos);
             foundSpace += 8 - fluidstate.getAmount();
         }
-
+        int totalTransfer = 0;
         for (BlockPos pos : set) {
             FluidState fluidstate = level.getFluidState(pos);
             int transfer = Math.min(8 - fluidstate.getAmount(), amount);
             amount -= transfer;
+            totalTransfer += transfer;
             ((IMixinFlowingFluid) fluid).changeFluid(level, pos, transfer);
         }
 
-        return true;
+        return totalTransfer;
+    }
+    public boolean addFluid(int amount) {
+        return addFluid(amount, false) != -1;
     }
 
     public boolean checkForFluid(int amount) {
