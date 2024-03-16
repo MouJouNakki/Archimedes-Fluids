@@ -2,6 +2,7 @@ package com.moujounakki.archimedesfluids;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -109,20 +110,45 @@ public class ArchimedesFluids
     @SubscribeEvent
     public void onFillBucket(FillBucketEvent event) {
         Fluid fluid = ((BucketItem)(event.getEmptyBucket().getItem())).getFluid();
+        int fluidAmount;
+        if(fluid == Fluids.EMPTY)
+            fluidAmount = 0;
+        else
+            fluidAmount = 8;
+        CompoundTag amountTag = event.getEmptyBucket().getOrCreateTag();
+        if (amountTag.contains("fluid_amount"))
+            fluidAmount = amountTag.getInt("fluid_amount");
         Level level = event.getLevel();
         HitResult target = event.getTarget();
         if(target == null)
             return;
         BlockPos pos = new BlockPos(target.getLocation());
         Fluid fluid1 = level.getFluidState(pos).getType();
+        boolean removeFluid = false;
         if(fluid == Fluids.EMPTY) {
-            if(fluid1 == Fluids.EMPTY) {
+            if (fluid1 == Fluids.EMPTY) {
                 event.setCanceled(true);
                 return;
             }
+            removeFluid = true;
+        }
+        else {
+            if(!level.getBlockState(pos).isAir() && !fluid1.isSame(fluid)) {
+                event.setCanceled(true);
+                return;
+            }
+            if (fluidAmount < 8 && fluid1.isSame(fluid)) {
+                removeFluid = true;
+            }
+        }
+        if(removeFluid) {
             FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid1);
-            if(fluidPool.removeFluid(8)) {
-                event.setFilledBucket(new ItemStack(fluid1.getBucket()));
+            int removed = fluidPool.removeFluid(8 - fluidAmount, true);
+            if(removed > 0) {
+                ItemStack newStack = new ItemStack(fluid1.getBucket());
+                newStack.getOrCreateTag().putInt("fluid_amount",fluidAmount + removed);
+                newStack.setDamageValue(8 - (fluidAmount + removed));
+                event.setFilledBucket(newStack);
                 event.setResult(Event.Result.ALLOW);
                 ((BucketItem)(event.getEmptyBucket().getItem())).checkExtraContent(event.getEntity(), level, event.getEmptyBucket(), pos);
             }
@@ -130,13 +156,18 @@ public class ArchimedesFluids
                 event.setCanceled(true);
         }
         else {
-            if(!level.getBlockState(pos).isAir() && !fluid1.isSame(fluid)) {
-                event.setCanceled(true);
-                return;
-            }
             FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid);
-            if(fluidPool.addFluid(8)) {
+            int placed = fluidPool.addFluid(fluidAmount, true);
+            if(placed == fluidAmount) {
                 event.setFilledBucket(new ItemStack(Items.BUCKET));
+                event.setResult(Event.Result.ALLOW);
+                ((BucketItem)(event.getEmptyBucket().getItem())).checkExtraContent(event.getEntity(), level, event.getEmptyBucket(), pos);
+            }
+            else if(placed > 0) {
+                ItemStack newStack = new ItemStack(fluid.getBucket());
+                newStack.getOrCreateTag().putInt("fluid_amount",fluidAmount - placed);
+                newStack.setDamageValue(8 - (fluidAmount - placed));
+                event.setFilledBucket(newStack);
                 event.setResult(Event.Result.ALLOW);
                 ((BucketItem)(event.getEmptyBucket().getItem())).checkExtraContent(event.getEntity(), level, event.getEmptyBucket(), pos);
             }

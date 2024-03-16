@@ -5,6 +5,7 @@
     "MixinFlowingFluid",
     "MixinBlockBehaviour",
     "MixinStateDefinitionBuilder",
-    "MixinBlockStateBase"
+    "MixinBlockStateBase",
+    "MixinBucketItem"
   ]
 }
