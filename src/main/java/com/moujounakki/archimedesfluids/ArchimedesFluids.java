@@ -47,6 +47,9 @@ public class ArchimedesFluids
 
     public ArchimedesFluids()
     {
+        // Initialize the configuration
+        ArchimedesFluidsCommonConfig.initialize();
+
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // Register ourselves for server and other game events we are interested in
@@ -143,7 +146,7 @@ public class ArchimedesFluids
         }
         if(removeFluid) {
             FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid1);
-            int removed = fluidPool.removeFluid(8 - fluidAmount, true);
+            int removed = fluidPool.removeFluid(8 - fluidAmount, ArchimedesFluidsCommonConfig.getPartialBuckets());
             if(removed > 0) {
                 ItemStack newStack = new ItemStack(fluid1.getBucket());
                 newStack.getOrCreateTag().putInt("fluid_amount",fluidAmount + removed);
@@ -157,7 +160,7 @@ public class ArchimedesFluids
         }
         else {
             FluidPool fluidPool = new FluidPool(event.getLevel(),pos,fluid);
-            int placed = fluidPool.addFluid(fluidAmount, true);
+            int placed = fluidPool.addFluid(fluidAmount, ArchimedesFluidsCommonConfig.getPartialBuckets());
             if(placed == fluidAmount) {
                 event.setFilledBucket(new ItemStack(Items.BUCKET));
                 event.setResult(Event.Result.ALLOW);

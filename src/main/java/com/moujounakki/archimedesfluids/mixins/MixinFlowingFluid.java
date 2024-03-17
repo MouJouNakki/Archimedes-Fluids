@@ -63,7 +63,7 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
                     }
                 }
             }
-        } else if (amount == 1 && level.random.nextFloat() < 0.3) {
+        } else if (amount == 1 && level.random.nextFloat() < ArchimedesFluidsCommonConfig.getPuddleSpread()) {
 List<Direction> directionList = Direction.Plane.HORIZONTAL.shuffledCopy(level.getRandom());
 Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
             for (Direction direction : shuffledDirections) {
@@ -108,7 +108,8 @@ Direction[] shuffledDirections = directionList.toArray(new Direction[0]);
     }
     
     private void transferFluid(LevelAccessor level, BlockPos from, BlockPos to, int fromAmount, int toAmount) {
-        this.transferFluid(level, from, to, fromAmount, toAmount, 1);
+        this.transferFluid(level, from, to, fromAmount, toAmount,
+                Math.min(ArchimedesFluidsCommonConfig.getFlowSpeed(), (int)Math.ceil(((double)fromAmount-toAmount)/2)));
     }
     
     private void transferFluid(LevelAccessor level, BlockPos from, BlockPos to, int fromAmount, int toAmount, int transfer) {
