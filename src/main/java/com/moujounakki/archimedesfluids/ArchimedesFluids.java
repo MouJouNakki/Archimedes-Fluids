@@ -18,6 +18,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.PistonEvent;
@@ -146,5 +147,9 @@ public class ArchimedesFluids {
             else
                 event.setCanceled(true);
         }
+    }
+    @SubscribeEvent
+    public void onLevelTick(TickEvent.LevelTickEvent event) {
+        FluidTicker.getInstance(event.level).tick();
     }
 }
