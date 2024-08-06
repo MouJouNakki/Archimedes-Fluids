@@ -9,9 +9,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.LiquidBlockContainer;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -177,5 +180,30 @@ public class ArchimedesFluids
             else
                 event.setCanceled(true);
         }
+    }
+    @SubscribeEvent
+    public void onCropGrowPre(BlockEvent.CropGrowEvent.Pre event) {
+        if (ArchimedesFluidsCommonConfig.getFarmlandWaterConsumption() <= 0)
+            return;
+        LevelAccessor level = event.getLevel();
+        BlockPos pos = event.getPos();
+        BlockState state = event.getState();
+        if (!(state.getBlock() instanceof CropBlock))
+            return;
+        if (level.getBlockState(pos.below()).getValue(BlockStateProperties.MOISTURE) <= 0)
+            event.setResult(Event.Result.DENY);
+    }
+    @SubscribeEvent
+    public void onGropGrowPost(BlockEvent.CropGrowEvent.Post event) {
+        if (ArchimedesFluidsCommonConfig.getFarmlandWaterConsumption() <= 0)
+            return;
+        LevelAccessor level = event.getLevel();
+        BlockPos pos = event.getPos();
+        BlockState state = event.getState();
+        if (!(state.getBlock() instanceof CropBlock))
+            return;
+        BlockPos pos1 = pos.below();
+        BlockState state1 = level.getBlockState(pos.below());
+        level.setBlock(pos1, state1.setValue(BlockStateProperties.MOISTURE, Integer.valueOf(Math.max(0,state1.getValue(BlockStateProperties.MOISTURE) - ArchimedesFluidsCommonConfig.getFarmlandWaterConsumption()))), 2);
     }
 }
