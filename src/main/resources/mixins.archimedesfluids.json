@@ -6,6 +6,7 @@
     "MixinBlockBehaviour",
     "MixinStateDefinitionBuilder",
     "MixinBlockStateBase",
-    "MixinBucketItem"
+    "MixinBucketItem",
+    "MixinStateHolder"
   ]
 }
