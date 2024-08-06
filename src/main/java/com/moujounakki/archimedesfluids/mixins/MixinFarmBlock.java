@@ -5,6 +5,7 @@ import com.moujounakki.archimedesfluids.IMixinFlowingFluid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -18,17 +19,19 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.Nullable;
+
 @Mixin(FarmBlock.class)
 public abstract class MixinFarmBlock extends Block {
     @Shadow
     public static final IntegerProperty MOISTURE = BlockStateProperties.MOISTURE;
 
     @Shadow
-    private static boolean isUnderCrops(BlockGetter p_53251_, BlockPos p_53252_) {
+    private static boolean shouldMaintainFarmland(BlockGetter p_53251_, BlockPos p_53252_) {
         return false;
     }
     @Shadow
-    public static void turnToDirt(BlockState p_53297_, Level p_53298_, BlockPos p_53299_) {}
+    public static void turnToDirt(@Nullable Entity p_270981_, BlockState p_53297_, Level p_53298_, BlockPos p_53299_) {}
 
     public MixinFarmBlock(Properties p_49795_) {
         super(p_49795_);
@@ -58,8 +61,8 @@ public abstract class MixinFarmBlock extends Block {
             }
             if (found)
                 level.setBlock(pos, blockstate.setValue(MOISTURE, Integer.valueOf(7)), 2);
-            else if (!isUnderCrops(level, pos))
-                turnToDirt(blockstate, level, pos);
+            else if (!shouldMaintainFarmland(level, pos))
+                turnToDirt((Entity) null, blockstate, level, pos);
 //            if (!isNearWater(level, pos) && !level.isRainingAt(pos.above())) {
 //                if (i > 0) {
 //                    level.setBlock(pos, blockstate.setValue(MOISTURE, Integer.valueOf(i - 1)), 2);
